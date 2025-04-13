@@ -1,22 +1,25 @@
-import logo from './logo.svg';
+// src/App.js
 import './App.css';
-import { Provider } from "./components/ui/provider"
-import Home from "./pages/Home"
-import Register from './pages/Register';
-import Login from "./pages/Login"
+import { Provider } from "./components/ui/provider";
+import LoginPage from "./pages/LoginPage";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import CadastroPage from './pages/CadastroPage';
+import HomePage from './pages/HomePage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
     <Provider>
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<CadastroPage />} />
+          <Route path="/me" element={<ProfilePage />} />
         </Routes>
       </Router>
     </Provider>
-  )
+  );
 }
 
 export default App;
