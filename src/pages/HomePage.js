@@ -324,10 +324,17 @@ const HomePage = () => {
                 <ListItemIcon><Event /></ListItemIcon>
                 <ListItemText primary="Criar Torneio" secondary="Criar torneio" />
               </ListItem>
+
+              <ListItem button onClick={() => navigate('/categories/creation')}>
+                <ListItemIcon><Event /></ListItemIcon>
+                <ListItemText primary="Criar Categoria" secondary="Criar categoria" />
+              </ListItem>
+
               <ListItem button onClick={() => navigate('/tournaments')}>
                 <ListItemIcon><Event /></ListItemIcon>
                 <ListItemText primary="Ver torneios" secondary="Mostrar todos os torneios" />
               </ListItem>
+
             </List>
             <Box sx={{ mt: 'auto', p: 2 }}>
               <Button
