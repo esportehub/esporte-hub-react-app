@@ -1,17 +1,19 @@
 // src/theme.js
-import { createTheme } from '@mui/material/styles';
+import { extendTheme } from '@chakra-ui/react';
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2', // Example primary color
-    },
-    secondary: {
-      main: '#dc004e', // Example secondary color
-    },
-    background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
+const theme = extendTheme({
+  fonts: {
+    heading: `'Figtree', sans-serif`,
+    body: `'Figtree', sans-serif`,
+  },
+  config: {
+    initialColorMode: 'dark',
+    useSystemColorMode: false,
+  },
+  colors: {
+    brand: {
+      500: '#149E4C', // Sua cor primária
+      600: '#195E35', // Sua cor secundária
     },
   },
 });

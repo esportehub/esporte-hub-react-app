@@ -79,7 +79,7 @@ const Register = () => {
 
                 <Heading size="sm" textAlign="center" margin="20px 0">
                     Já tem uma conta?{" "}
-                    <Link as={RouterLink} to="/" color="green" variant="underline">
+                    <Link as={RouterLink} to="/login" color="green" variant="underline">
                         Fazer login!
                     </Link>
                 </Heading>

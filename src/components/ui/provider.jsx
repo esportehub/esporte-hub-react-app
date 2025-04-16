@@ -1,11 +1,13 @@
 // src/components/ui/provider.jsx
-import { ThemeProvider } from '@mui/material/styles';
+import { ChakraProvider } from '@chakra-ui/react';
 import theme from '../../theme';
 
 export function Provider({ children }) {
   return (
-    <ThemeProvider theme={theme}>
+    <ChakraProvider theme={theme}>
       {children}
-    </ThemeProvider>
+    </ChakraProvider>
   );
 }
+
+export default Provider;

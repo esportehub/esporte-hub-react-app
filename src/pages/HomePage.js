@@ -1,43 +1,65 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  AppBar,
-  Avatar,
   Box,
+  Flex,
+  Grid,
+  Heading,
+  Text,
+  Input,
+  InputGroup,
   Button,
-  Chip,
-  Container,
-  Drawer,
+  Avatar,
   IconButton,
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
   List,
   ListItem,
-  ListItemIcon,
-  ListItemText,
-  TextField,
-  Typography,
-  useMediaQuery,
-  useTheme,
-  CircularProgress,
-  LinearProgress,
-  Snackbar,
-  Alert
-} from '@mui/material';
+  ListIcon,
+  useDisclosure,
+  useBreakpointValue,
+  Image,
+  Badge,
+  Divider,
+  Stack,
+  Skeleton,
+  CircularProgress
+} from '@chakra-ui/react';
+import { useToast } from '@chakra-ui/toast';
+import { useColorModeValue } from '@chakra-ui/color-mode';
+import { DrawerOverlay, DrawerCloseButton } from '@chakra-ui/modal';
+import { InputLeftElement } from '@chakra-ui/input';
+import { FiHelpCircle } from 'react-icons/fi';
+import { Icon } from '@chakra-ui/react';
 import {
-  Menu,
-  Search,
-  ExitToApp,
-  Event,
-  CheckCircle,
-  Cancel,
-  Check,
-  Help
-} from '@mui/icons-material';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import logo from "../assets/images/esporte-hub-logo.png"
+  FiMenu,
+  FiSearch,
+  FiLogOut,
+  FiCalendar,
+  FiCheckCircle,
+  FiX,
+  FiCheck,
+  FiHome,
+  FiPlus,
+  FiAward
+} from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import logo from "../assets/images/esporte-hub-logo.png";
 
 const HomePage = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  // Colors
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const primaryColor = '#149E4C';
+  const secondaryColor = '#195E35';
+  const bgColor = useColorModeValue('gray.50', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.700', 'gray.200');
+
   const navigate = useNavigate();
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const isMobile = useBreakpointValue({ base: true, md: false });
   
   // State for the page
   const [featuredTournaments, setFeaturedTournaments] = useState([]);
@@ -47,13 +69,6 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [user, setUser] = useState(null);
-  const [userImage, setUserImage] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
 
   // Fetch data on component mount
   useEffect(() => {
@@ -77,25 +92,20 @@ const HomePage = () => {
 
   const fetchUserData = async () => {
     try {
-      // Simulate API call
-      // const response = await fetch(`${process.env.REACT_APP_API_URL}/me`);
-      // const data = await response.json();
-      // setUser(data);
-      // fetchUserImage(data.imageHash);
-      
       // Mock data for demo
       setUser({
         name: 'John Doe',
         email: 'john@example.com',
-        imageHash: '12345'
+        avatar: 'https://bit.ly/dan-abramov'
       });
-      setUserImage('/assets/images/default-avatar.jpg');
     } catch (error) {
       console.error('Error fetching user data:', error);
-      setSnackbar({
-        open: true,
-        message: 'Failed to load user data',
-        severity: 'error'
+      toast({
+        title: 'Erro',
+        description: 'Falha ao carregar dados do usuário',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
       });
     }
   };
@@ -103,38 +113,35 @@ const HomePage = () => {
   const fetchFeaturedTournaments = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      // const response = await fetch(`${process.env.REACT_APP_API_URL}/tournaments/featured`);
-      // const data = await response.json();
-      // setFeaturedTournaments(data);
-      
       // Mock data for demo
       setFeaturedTournaments([
         {
           id: 1,
           name: 'Torneio de Verão',
-          tournamentLocation: 'Praia Copacabana',
-          tournamentStartDate: '15/12/2023',
-          prizeValue: 5000,
+          location: 'Praia Copacabana',
+          date: '15/12/2023',
+          prize: 5000,
           status: 'ativo',
-          imageHash: 'tournament1'
+          image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
         },
         {
           id: 2,
           name: 'Campeonato Estadual',
-          tournamentLocation: 'Clube de Praia',
-          tournamentStartDate: '20/01/2024',
-          prizeValue: 10000,
+          location: 'Clube de Praia',
+          date: '20/01/2024',
+          prize: 10000,
           status: 'ativo',
-          imageHash: 'tournament2'
+          image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
         }
       ]);
     } catch (error) {
       console.error('Error fetching featured tournaments:', error);
-      setSnackbar({
-        open: true,
-        message: 'Failed to load featured tournaments',
-        severity: 'error'
+      toast({
+        title: 'Erro',
+        description: 'Falha ao carregar torneios em destaque',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
@@ -146,29 +153,34 @@ const HomePage = () => {
     
     setIsLoading(true);
     try {
-      // Simulate API call
-      // const response = await fetch(`${process.env.REACT_APP_API_URL}/tournaments?page=${currentPage}`);
-      // const data = await response.json();
-      
       // Mock data for demo
       const mockData = [
         {
           id: 3,
           name: 'Torneio Amador',
-          tournamentLocation: 'Parque Esportivo',
-          tournamentStartDate: '05/01/2024',
-          prizeValue: 2000,
+          location: 'Parque Esportivo',
+          date: '05/01/2024',
+          prize: 2000,
           status: 'ativo',
-          imageHash: 'tournament3'
+          image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
         },
         {
           id: 4,
           name: 'Liga Profissional',
-          tournamentLocation: 'Arena Esportiva',
-          tournamentStartDate: '10/02/2024',
-          prizeValue: 15000,
+          location: 'Arena Esportiva',
+          date: '10/02/2024',
+          prize: 15000,
           status: 'ativo',
-          imageHash: 'tournament4'
+          image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+        },
+        {
+          id: 5,
+          name: 'Torneio de Inverno',
+          location: 'Ginásio Municipal',
+          date: '25/07/2024',
+          prize: 8000,
+          status: 'em_breve',
+          image: 'https://images.unsplash.com/photo-1521412644187-c49fa049e84d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
         }
       ];
       
@@ -176,10 +188,12 @@ const HomePage = () => {
       if (mockData.length === 0) setCurrentPage(-1);
     } catch (error) {
       console.error('Error fetching tournaments:', error);
-      setSnackbar({
-        open: true,
-        message: 'Failed to load tournaments',
-        severity: 'error'
+      toast({
+        title: 'Erro',
+        description: 'Falha ao carregar torneios',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
@@ -194,417 +208,409 @@ const HomePage = () => {
     setSearchText(e.target.value);
   };
 
-  const getStatusColor = (status) => {
+  const getStatusProps = (status) => {
     switch (status) {
-      case 'ativo': return 'success';
-      case 'cancelado': return 'error';
-      case 'concluido': return 'warning';
-      default: return 'default';
+      case 'ativo':
+        return { 
+          color: 'green', 
+          icon: FiCheckCircle, 
+          text: 'Ativo' 
+        };
+      case 'cancelado':
+        return { 
+          color: 'red', 
+          icon: FiX, 
+          text: 'Cancelado' 
+        };
+      case 'concluido':
+        return { 
+          color: 'blue', 
+          icon: FiCheck, 
+          text: 'Concluído' 
+        };
+      case 'em_breve':
+        return { 
+          color: 'orange', 
+          icon: FiHelpCircle, 
+          text: 'Em breve' 
+        };
+      default:
+        return { 
+          color: 'gray', 
+          icon: FiHelpCircle, 
+          text: 'Desconhecido' 
+        };
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'ativo': return <CheckCircle fontSize="small" />;
-      case 'cancelado': return <Cancel fontSize="small" />;
-      case 'concluido': return <Check fontSize="small" />;
-      default: return <Help fontSize="small" />;
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'ativo': return 'Ativo';
-      case 'cancelado': return 'Cancelado';
-      case 'concluido': return 'Concluído';
-      default: return 'Desconhecido';
-    }
-  };
-
-  const toggleDrawer = (open) => (event) => {
-    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
-      return;
-    }
-    setDrawerOpen(open);
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+  const renderTournamentCard = (tournament, isFeatured = false) => {
+    const statusProps = getStatusProps(tournament.status);
+    
+    return (
+      <Box
+        key={tournament.id}
+        onClick={() => navigate(`/tournament/${tournament.id}`)}
+        bg={cardBg}
+        borderRadius="lg"
+        overflow="hidden"
+        boxShadow="md"
+        transition="all 0.2s"
+        _hover={{
+          transform: 'translateY(-4px)',
+          boxShadow: 'xl',
+          cursor: 'pointer'
+        }}
+        h="100%"
+        display="flex"
+        flexDirection="column"
+      >
+        <Box
+          h={isFeatured ? "200px" : "160px"}
+          bg="gray.200"
+          overflow="hidden"
+          position="relative"
+        >
+          <Image
+            src={tournament.image}
+            alt={tournament.name}
+            objectFit="cover"
+            w="100%"
+            h="100%"
+          />
+          <Badge
+            position="absolute"
+            top="2"
+            right="2"
+            colorScheme={statusProps.color}
+            px="2"
+            py="1"
+            borderRadius="md"
+            display="flex"
+            alignItems="center"
+          >
+            <Icon as={statusProps.icon} mr="1" />
+            {statusProps.text}
+          </Badge>
+        </Box>
+        <Box p="4" flex="1" display="flex" flexDirection="column">
+          <Heading size="md" mb="2" noOfLines={1}>
+            {tournament.name}
+          </Heading>
+          
+          <Stack spacing="1" mt="auto">
+            <Text fontSize="sm" color={textColor}>
+              <Text as="span" fontWeight="semibold">Local:</Text> {tournament.location}
+            </Text>
+            <Text fontSize="sm" color={textColor}>
+              <Text as="span" fontWeight="semibold">Data:</Text> {tournament.date}
+            </Text>
+            <Text fontSize="sm" color={textColor}>
+              <Text as="span" fontWeight="semibold">Prêmio:</Text> R${tournament.prize.toLocaleString()}
+            </Text>
+          </Stack>
+        </Box>
+      </Box>
+    );
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {/* App Bar */}
-      <AppBar
-        position="static"
-        sx={{
-          backgroundColor: theme.palette.background.paper,
-          color: theme.palette.text.primary,
-          boxShadow: 'none',
-          borderBottom: `1px solid ${theme.palette.divider}`
-        }}
+    <Box minH="100vh" bg={bgColor}>
+      {/* Header */}
+      <Flex
+        as="header"
+        bg="black"
+        color="white"
+        px={{ base: 4, md: 6 }}
+        py={4}
+        align="center"
+        justify="space-between"
+        position="sticky"
+        top="0"
+        zIndex="sticky"
+        boxShadow="sm"
       >
-        <Container maxWidth="xl" sx={{ display: 'flex', alignItems: 'center', py: 2 }}>
+        <Flex align="center">
           {isMobile && (
             <IconButton
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              onClick={toggleDrawer(true)}
-              sx={{ mr: 2 }}
-            >
-              <Menu />
-            </IconButton>
-          )}
-          
-          <Box
-            component="img"
-            src={logo}
-            alt="Logo"
-            sx={{
-              height: 40,
-              flexGrow: isMobile ? 1 : 0,
-              objectFit: 'contain'
-            }}
-          />
-          
-          {!isMobile && (
-            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-              <Chip
-                label="Beach Tennis"
-                color="primary"
-                variant="outlined"
-                sx={{ mx: 1 }}
-              />
-              <Chip
-                label="Futevolei"
-                variant="outlined"
-                sx={{ mx: 1 }}
-              />
-            </Box>
-          )}
-          
-          <IconButton
-            edge="end"
-            color="inherit"
-            onClick={() => navigate('/me')}
-            sx={{ ml: 2 }}
-          >
-            <Avatar
-              src={userImage}
-              alt={user?.name}
-              sx={{
-                width: 40,
-                height: 40,
-                border: `2px solid ${theme.palette.primary.main}`
-              }}
+              icon={<FiMenu />}
+              variant="ghost"
+              color="white"
+              fontSize="20px"
+              mr={2}
+              onClick={onOpen}
+              aria-label="Abrir menu"
             />
-          </IconButton>
-        </Container>
-      </AppBar>
+          )}
+          
+          <Image 
+            src={logo} 
+            alt="EsporteHub" 
+            h={{ base: '30px', md: '40px' }} 
+            objectFit="contain"
+          />
+        </Flex>
+        
+        {!isMobile && (
+          <Flex align="center" gap={2}>
+            <Button variant="ghost" colorScheme="green" color="white" _hover={{ bg: 'rgba(255,255,255,0.1)' }}>
+              Beach Tennis
+            </Button>
+            <Button variant="ghost" colorScheme="green" color="white" _hover={{ bg: 'rgba(255,255,255,0.1)' }}>
+              Futevolei
+            </Button>
+          </Flex>
+        )}
+        
+        <Avatar 
+          src={user?.avatar} 
+          name={user?.name} 
+          size="sm" 
+          cursor="pointer"
+          onClick={() => navigate('/me')}
+          border={`2px solid ${primaryColor}`}
+        />
+      </Flex>
 
       {/* Main Content */}
-      <Box sx={{ display: 'flex', flexGrow: 1 }}>
-        {/* Sidebar for desktop */}
+      <Flex>
+        {/* Sidebar - Desktop */}
         {!isMobile && (
-          <Drawer
-            variant="permanent"
-            sx={{
-              width: 240,
-              flexShrink: 0,
-              '& .MuiDrawer-paper': {
-                width: 240,
-                boxSizing: 'border-box',
-                borderRight: 'none'
-              }
-            }}
-          >
-            <List>
-              <ListItem button onClick={() => navigate('/tournaments/creation')}>
-                <ListItemIcon><Event /></ListItemIcon>
-                <ListItemText primary="Criar Torneio" secondary="Criar torneio" />
-              </ListItem>
-
-              <ListItem button onClick={() => navigate('/categories/creation')}>
-                <ListItemIcon><Event /></ListItemIcon>
-                <ListItemText primary="Criar Categoria" secondary="Criar categoria" />
-              </ListItem>
-
-              <ListItem button onClick={() => navigate('/tournaments')}>
-                <ListItemIcon><Event /></ListItemIcon>
-                <ListItemText primary="Ver torneios" secondary="Mostrar todos os torneios" />
-              </ListItem>
-
-            </List>
-            <Box sx={{ mt: 'auto', p: 2 }}>
-              <Button
-                fullWidth
-                startIcon={<ExitToApp />}
-                onClick={() => navigate('/login')}
-              >
-                Sair
-              </Button>
-            </Box>
-          </Drawer>
-        )}
-
-        {/* Mobile drawer */}
-        <Drawer
-          anchor="left"
-          open={drawerOpen}
-          onClose={toggleDrawer(false)}
-        >
           <Box
-            sx={{ width: 250 }}
-            role="presentation"
-            onClick={toggleDrawer(false)}
-            onKeyDown={toggleDrawer(false)}
+            as="aside"
+            w="240px"
+            minH="calc(100vh - 72px)"
+            bg={cardBg}
+            borderRight="1px solid"
+           borderColor={borderColor}
+            py={4}
           >
-            <List>
-              <ListItem button onClick={() => navigate('/tournaments/creation')}>
-                <ListItemIcon><Event /></ListItemIcon>
-                <ListItemText primary="Criar Torneio" secondary="Criar torneio" />
+            <List spacing={1} px={2}>
+              <ListItem>
+                <Button
+                  w="full"
+                  justifyContent="flex-start"
+                  leftIcon={<FiHome />}
+                  variant="ghost"
+                  colorScheme="green"
+                  onClick={() => navigate('/')}
+                >
+                  Início
+                </Button>
               </ListItem>
-              <ListItem button onClick={() => navigate('/tournaments')}>
-                <ListItemIcon><Event /></ListItemIcon>
-                <ListItemText primary="Ver torneios" secondary="Mostrar todos os torneios" />
+              <ListItem>
+                <Button
+                  w="full"
+                  justifyContent="flex-start"
+                  leftIcon={<FiPlus />}
+                  variant="ghost"
+                  colorScheme="green"
+                  onClick={() => navigate('/tournaments/creation')}
+                >
+                  Criar Torneio
+                </Button>
+              </ListItem>
+              <ListItem>
+                <Button
+                  w="full"
+                  justifyContent="flex-start"
+                  leftIcon={<FiPlus />}
+                  variant="ghost"
+                  colorScheme="green"
+                  onClick={() => navigate('/categories/creation')}
+                >
+                  Criar Categoria
+                </Button>
+              </ListItem>
+              <ListItem>
+                <Button
+                  w="full"
+                  justifyContent="flex-start"
+                  leftIcon={<FiAward />}
+                  variant="ghost"
+                  colorScheme="green"
+                  onClick={() => navigate('/tournaments')}
+                >
+                  Ver Torneios
+                </Button>
               </ListItem>
             </List>
-            <Box sx={{ mt: 'auto', p: 2 }}>
+            
+            <Box mt="auto" px={2} pt={4}>
               <Button
-                fullWidth
-                startIcon={<ExitToApp />}
+                w="full"
+                leftIcon={<FiLogOut />}
+                colorScheme="red"
+                variant="outline"
                 onClick={() => navigate('/login')}
               >
                 Sair
               </Button>
             </Box>
           </Box>
+        )}
+
+        {/* Mobile Drawer */}
+        <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
+          <DrawerOverlay />
+          <DrawerContent bg={cardBg}>
+            <DrawerCloseButton />
+            <DrawerHeader borderBottomWidth="1px">Menu</DrawerHeader>
+            <DrawerBody>
+              <List spacing={3}>
+                <ListItem>
+                  <Button
+                    w="full"
+                    justifyContent="flex-start"
+                    leftIcon={<FiHome />}
+                    variant="ghost"
+                    colorScheme="green"
+                    onClick={() => {
+                      navigate('/');
+                      onClose();
+                    }}
+                  >
+                    Início
+                  </Button>
+                </ListItem>
+                <ListItem>
+                  <Button
+                    w="full"
+                    justifyContent="flex-start"
+                    leftIcon={<FiPlus />}
+                    variant="ghost"
+                    colorScheme="green"
+                    onClick={() => {
+                      navigate('/tournaments/creation');
+                      onClose();
+                    }}
+                  >
+                    Criar Torneio
+                  </Button>
+                </ListItem>
+                <ListItem>
+                  <Button
+                    w="full"
+                    justifyContent="flex-start"
+                    leftIcon={<FiAward />}
+                    variant="ghost"
+                    colorScheme="green"
+                    onClick={() => {
+                      navigate('/tournaments');
+                      onClose();
+                    }}
+                  >
+                    Ver Torneios
+                  </Button>
+                </ListItem>
+              </List>
+              
+              <Box mt="8">
+                <Button
+                  w="full"
+                  leftIcon={<FiLogOut />}
+                  colorScheme="red"
+                  variant="outline"
+                  onClick={() => {
+                    navigate('/login');
+                    onClose();
+                  }}
+                >
+                  Sair
+                </Button>
+              </Box>
+            </DrawerBody>
+          </DrawerContent>
         </Drawer>
 
-        {/* Main content area */}
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            p: 3,
-            width: '100%',
-            maxWidth: '1200px',
-            margin: '0 auto'
-          }}
-        >
+        {/* Main Content Area */}
+        <Box flex="1" p={{ base: 4, md: 6 }} maxW="1200px" mx="auto">
           {/* Featured Tournaments */}
           {featuredTournaments.length > 0 && (
             <>
-              <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+              <Heading size="xl" mb={6} color={textColor}>
                 Torneios em Destaque
-              </Typography>
+              </Heading>
               
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '1fr',
-                    sm: 'repeat(2, 1fr)',
-                    lg: 'repeat(3, 1fr)'
-                  },
-                  gap: 3,
-                  mb: 5
+              <Grid
+                templateColumns={{
+                  base: '1fr',
+                  sm: 'repeat(2, 1fr)',
+                  lg: 'repeat(3, 1fr)'
                 }}
+                gap={6}
+                mb={10}
               >
-                {featuredTournaments.map((tournament) => (
-                  <Box
-                    key={tournament.id}
-                    onClick={() => navigate(`/tournament/${tournament.id}`)}
-                    sx={{
-                      borderRadius: 2,
-                      overflow: 'hidden',
-                      boxShadow: 1,
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 4,
-                        cursor: 'pointer'
-                      }
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        height: 200,
-                        bgcolor: 'grey.200',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <Typography variant="body1">Imagem do Torneio</Typography>
-                    </Box>
-                    <Box sx={{ p: 2 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          mb: 1
-                        }}
-                      >
-                        <Typography variant="h6" noWrap>
-                          {tournament.name}
-                        </Typography>
-                        <Chip
-                          icon={getStatusIcon(tournament.status)}
-                          label={getStatusText(tournament.status)}
-                          color={getStatusColor(tournament.status)}
-                          size="small"
-                        />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Local: {tournament.tournamentLocation}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Data: {tournament.tournamentStartDate}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Prêmio: R${tournament.prizeValue.toLocaleString()}
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Box>
+                {featuredTournaments.map(tournament => 
+                  renderTournamentCard(tournament, true)
+                )}
+              </Grid>
             </>
           )}
 
           {/* All Tournaments */}
-          <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+          <Heading size="xl" mb={6} color={textColor}>
             Torneios e Rankings
-          </Typography>
+          </Heading>
           
-          <TextField
-            fullWidth
-            placeholder="Pesquise torneios e rankings"
-            variant="outlined"
-            value={searchText}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <Search sx={{ color: 'action.active', mr: 1 }} />
-              )
-            }}
-            sx={{ mb: 3 }}
-          />
+          <InputGroup mb={6}>
+            <InputLeftElement pointerEvents="none">
+              <FiSearch color="gray.300" />
+            </InputLeftElement>
+            <Input
+              placeholder="Pesquise torneios e rankings"
+              value={searchText}
+              onChange={handleSearchChange}
+              bg={cardBg}
+            />
+          </InputGroup>
           
           {isLoading && filteredTournaments.length === 0 ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-              <CircularProgress />
-            </Box>
+            <Grid
+              templateColumns={{
+                base: '1fr',
+                sm: 'repeat(2, 1fr)',
+                lg: 'repeat(3, 1fr)'
+              }}
+              gap={6}
+            >
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} h="300px" borderRadius="lg" />
+              ))}
+            </Grid>
           ) : filteredTournaments.length === 0 ? (
-            <Box sx={{ textAlign: 'center', p: 4 }}>
-              <Typography>
+            <Box textAlign="center" py={10}>
+              <Text fontSize="lg">
                 {searchText ? 'Nenhum torneio encontrado' : 'Nenhum torneio disponível'}
-              </Typography>
+              </Text>
             </Box>
           ) : (
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, 1fr)',
-                  lg: 'repeat(3, 1fr)'
-                },
-                gap: 3
+            <Grid
+              templateColumns={{
+                base: '1fr',
+                sm: 'repeat(2, 1fr)',
+                lg: 'repeat(3, 1fr)'
               }}
+              gap={6}
             >
-              {filteredTournaments.map((tournament) => (
-                <Box
-                  key={tournament.id}
-                  onClick={() => navigate(`/tournament/${tournament.id}`)}
-                  sx={{
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                    boxShadow: 1,
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4,
-                      cursor: 'pointer'
-                    }
-                  }}
-                >
-                  <Box
-                    sx={{
-                      height: 160,
-                      bgcolor: 'grey.200',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Typography variant="body1">Imagem do Torneio</Typography>
-                  </Box>
-                  <Box sx={{ p: 2 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        mb: 1
-                      }}
-                    >
-                      <Typography variant="h6" noWrap>
-                        {tournament.name}
-                      </Typography>
-                      <Chip
-                        icon={getStatusIcon(tournament.status)}
-                        label={getStatusText(tournament.status)}
-                        color={getStatusColor(tournament.status)}
-                        size="small"
-                      />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Local: {tournament.tournamentLocation}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Data: {tournament.tournamentStartDate}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Prêmio: R${tournament.prizeValue.toLocaleString()}
-                    </Typography>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
+              {filteredTournaments.map(renderTournamentCard)}
+            </Grid>
           )}
           
           {currentPage !== -1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Flex justify="center" mt={8}>
               <Button
-                variant="outlined"
+                colorScheme="green"
+                variant="outline"
                 onClick={loadMoreTournaments}
-                disabled={isLoading}
+                isLoading={isLoading}
+                leftIcon={!isLoading && <FiPlus />}
               >
-                {isLoading ? <CircularProgress size={24} /> : 'Carregar mais'}
+                {isLoading ? 'Carregando...' : 'Carregar mais'}
               </Button>
-            </Box>
+            </Flex>
           )}
         </Box>
-      </Box>
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      </Flex>
     </Box>
   );
 };
