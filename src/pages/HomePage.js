@@ -48,13 +48,12 @@ import { useNavigate } from 'react-router-dom';
 import logo from "../assets/images/esporte-hub-logo.png";
 
 const HomePage = () => {
-  // Colors
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const primaryColor = '#149E4C';
-  const secondaryColor = '#195E35';
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const textColor = useColorModeValue('gray.700', 'gray.200');
+  const borderColor = 'gray.200';         // Cinza claro para bordas
+  const primaryColor = '#149E4C';         // Verde principal (mantido)
+  const secondaryColor = '#195E35';       // Verde mais escuro (mantido)
+  const bgColor = 'gray.50';              // Fundo cinza bem claro
+  const cardBg = 'white';                 // Fundo branco para cards
+  const textColor = 'gray.700';  
 
   const navigate = useNavigate();
   const toast = useToast();

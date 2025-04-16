@@ -2,7 +2,6 @@
 import './App.css';
 import { Provider } from "./components/ui/provider";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import theme from './theme';
 import CadastroPage from './pages/CadastroPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -12,12 +11,10 @@ import CategoryCreationPage from './pages/CategoryCreationPage';
 import DadosPessoais from './pages/DadosPessoais';
 import TournamentRegistrationPage from './pages/TournamentRegistrationPage';
 import TournamentCalendarPage from './pages/TournamentCalendarPage';
-import { ColorModeScript } from '@chakra-ui/color-mode';
 
 function App() {
   return (
     <Provider>
-     <ColorModeScript initialColorMode={theme.config.initialColorMode} />
       <Router>
         <Routes>
           <Route path="/home" element={<HomePage />} />
