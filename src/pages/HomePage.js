@@ -16,18 +16,13 @@ import {
   DrawerBody,
   List,
   ListItem,
-  ListIcon,
   useDisclosure,
-  useBreakpointValue,
   Image,
   Badge,
-  Divider,
   Stack,
   Skeleton,
-  CircularProgress
 } from '@chakra-ui/react';
 import { useToast } from '@chakra-ui/toast';
-import { useColorModeValue } from '@chakra-ui/color-mode';
 import { DrawerOverlay, DrawerCloseButton } from '@chakra-ui/modal';
 import { InputLeftElement } from '@chakra-ui/input';
 import { FiHelpCircle } from 'react-icons/fi';
@@ -36,7 +31,6 @@ import {
   FiMenu,
   FiSearch,
   FiLogOut,
-  FiCalendar,
   FiCheckCircle,
   FiX,
   FiCheck,
@@ -58,7 +52,8 @@ const HomePage = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  //const isMobile = useBreakpointValue({ base: true, md: false });
+  const isMobile = true;
   
   // State for the page
   const [featuredTournaments, setFeaturedTournaments] = useState([]);

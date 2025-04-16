@@ -1,11 +1,13 @@
 // src/components/ui/provider.jsx
-import { ChakraProvider } from '@chakra-ui/react';
+
+import { ThemeProvider } from "next-themes";
+
 
 export function Provider({ children }) {
   return (
-    <ChakraProvider>
+    <ThemeProvider>
       {children}
-    </ChakraProvider>
+    </ThemeProvider>
   );
 }
 
