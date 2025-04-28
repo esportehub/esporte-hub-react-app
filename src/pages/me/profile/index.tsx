@@ -9,9 +9,8 @@ import {
   CircularProgress,
   Container,
   IconButton,
-  Progress,
-  Text,
   Grid,
+  Text,
   useTheme,
   Modal,
   ModalOverlay,
@@ -24,14 +23,13 @@ import {
 } from '@chakra-ui/react';
 import {
   ArrowBackIcon,
-  AddIcon,
-  CheckIcon,
   StarIcon,
   RepeatIcon,
-  PhoneIcon,
   ChevronRightIcon
 } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
+import { FaCamera } from 'react-icons/fa';
+import { IoPersonSharp, IoTennisballOutline } from 'react-icons/io5';
 
 interface User {
   id: string;
@@ -116,14 +114,14 @@ const ProfilePage = () => {
   };
 
   const infoCards: InfoCard[] = [
-    { icon: <CheckIcon boxSize={6} />, title: 'Torneios jogados no ano', value: user?.stats?.tournamentsPlayed || '0' },
+    { icon: <IoTennisballOutline />, title: 'Torneios jogados no ano', value: user?.stats?.tournamentsPlayed || '0' },
     { icon: <StarIcon boxSize={6} />, title: 'Rankings jogados no ano', value: user?.stats?.rankingsPlayed || '0' },
     { icon: <RepeatIcon boxSize={6} />, title: 'Torneios/Rankings em andamento', value: user?.stats?.activeTournaments || '0' },
     { icon: <StarIcon boxSize={6} />, title: 'Sequência de vitórias', value: user?.stats?.winStreak || '0' }
   ];
 
   const profileButtons: ProfileButton[] = [
-    { icon: <PhoneIcon boxSize={6} color="blue.500" />, label: 'Dados Pessoais', action: () => router.push('/profile/personal-data') },
+    { icon: <IoPersonSharp color="blue.500" />, label: 'Dados Pessoais', action: () => router.push('/profile/personal-data') },
     { icon: <ChevronRightIcon boxSize={6} color="blue.500" />, label: 'Sair', action: handleLogout }
   ];
 
@@ -171,7 +169,7 @@ const ProfilePage = () => {
             />
             <IconButton
               aria-label="Alterar foto"
-              icon={uploadingImage ? <CircularProgress isIndeterminate size="24px" color="white" /> : <AddIcon />}
+              icon={uploadingImage ? <CircularProgress isIndeterminate size="24px" color="white" /> : <FaCamera  />}
               onClick={handleImageUpload}
               position="absolute"
               bottom={0}
