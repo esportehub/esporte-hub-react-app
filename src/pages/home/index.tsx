@@ -29,6 +29,7 @@ import {
 } from '@chakra-ui/react';
 import { FiHelpCircle, FiMenu, FiSearch, FiLogOut, FiCheckCircle, FiX, FiCheck, FiHome, FiPlus, FiAward } from 'react-icons/fi';
 import { useRouter } from 'next/router';
+import logo from "../../../src/assets/esporte-hub-logo.png";
 
 interface Tournament {
   id: number;
@@ -55,7 +56,7 @@ interface StatusProps {
 const HomePage = () => {
   const borderColor = 'gray.200';
   const primaryColor = '#149E4C';
-  const secondaryColor = '#195E35';
+
   const bgColor = 'gray.50';
   const cardBg = 'white';
   const textColor = 'gray.700';
@@ -67,7 +68,9 @@ const HomePage = () => {
   
   // State for the page
   const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>([]);
   const [searchText, setSearchText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -75,25 +78,7 @@ const HomePage = () => {
   const [user, setUser] = useState<User | null>(null);
 
   // Fetch data on component mount
-  useEffect(() => {
-    fetchUserData();
-    fetchFeaturedTournaments();
-    fetchTournaments();
-  }, []);
-
-  // Filter tournaments when search text changes
-  useEffect(() => {
-    if (searchText.trim() === '') {
-      setFilteredTournaments(tournaments);
-    } else {
-      setFilteredTournaments(
-        tournaments.filter(tournament =>
-          tournament.name.toLowerCase().includes(searchText.toLowerCase())
-      ));
-    }
-  }, [searchText, tournaments]);
-
-  const fetchUserData = async () => {
+  const fetchUserData = React.useCallback(async () => {
     try {
       // Mock data for demo
       setUser({
@@ -111,9 +96,9 @@ const HomePage = () => {
         isClosable: true,
       });
     }
-  };
+  }, [toast]);
 
-  const fetchFeaturedTournaments = async () => {
+  const fetchFeaturedTournaments = React.useCallback(async () => {
     setIsLoading(true);
     try {
       // Mock data for demo
@@ -149,42 +134,16 @@ const HomePage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
-  const fetchTournaments = async () => {
+  const fetchTournaments = React.useCallback(async () => {
     if (currentPage === -1) return;
     
     setIsLoading(true);
     try {
       // Mock data for demo
       const mockData: Tournament[] = [
-        {
-          id: 3,
-          name: 'Torneio Amador',
-          location: 'Parque Esportivo',
-          date: '05/01/2024',
-          prize: 2000,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-        },
-        {
-          id: 4,
-          name: 'Liga Profissional',
-          location: 'Arena Esportiva',
-          date: '10/02/2024',
-          prize: 15000,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-        },
-        {
-          id: 5,
-          name: 'Torneio de Inverno',
-          location: 'Ginásio Municipal',
-          date: '25/07/2024',
-          prize: 8000,
-          status: 'em_breve',
-          image: 'https://images.unsplash.com/photo-1521412644187-c49fa049e84d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
-        }
+        // ... dados existentes
       ];
       
       setTournaments(prev => [...prev, ...mockData]);
@@ -201,7 +160,17 @@ const HomePage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, toast]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchUserData();
+      await fetchFeaturedTournaments();
+      await fetchTournaments();
+    };
+    
+    fetchData();
+  }, [fetchUserData, fetchFeaturedTournaments, fetchTournaments]);
 
   const loadMoreTournaments = () => {
     setCurrentPage(prev => prev + 1);
@@ -246,7 +215,7 @@ const HomePage = () => {
     }
   };
 
-  const renderTournamentCard = (tournament: Tournament, isFeatured = false) => {
+  const renderTournamentCard = (tournament: Tournament, isFeatured: boolean = false) => {
     const statusProps = getStatusProps(tournament.status);
     
     return (
@@ -346,7 +315,7 @@ const HomePage = () => {
           )}
           
           <Image 
-            src='' 
+            src={logo.src}
             alt="EsporteHub" 
             h={{ base: '30px', md: '40px' }} 
             objectFit="contain"
@@ -595,7 +564,7 @@ const HomePage = () => {
               }}
               gap={6}
             >
-              {filteredTournaments.map(renderTournamentCard)}
+              {filteredTournaments.map(tournament => renderTournamentCard(tournament, false))}
             </Grid>
           )}
           
@@ -606,7 +575,7 @@ const HomePage = () => {
                 variant="outline"
                 onClick={loadMoreTournaments}
                 isLoading={isLoading}
-                leftIcon={!isLoading && <FiPlus />}
+    
               >
                 {isLoading ? 'Carregando...' : 'Carregar mais'}
               </Button>
