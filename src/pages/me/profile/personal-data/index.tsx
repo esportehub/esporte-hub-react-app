@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
   Box,
@@ -29,6 +27,7 @@ import { ptBR } from 'date-fns/locale';
 import { FaBirthdayCake } from 'react-icons/fa';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { useRouter } from 'next/router';
 
 interface User {
   id: string;
@@ -54,7 +53,7 @@ interface FormData {
 }
 
 const DadosPessoais: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
@@ -78,7 +77,7 @@ const DadosPessoais: React.FC = () => {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const response = await fetch(`${process.env.REACT_APP_API_DEV_BASE_URL}/me`, {
+        const response = await fetch(`${process.env.REACT_APP_API_DEV_BASE_URL}/me/profile`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -141,11 +140,11 @@ const DadosPessoais: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const token = localStorage.getItem('authToken');
       const formattedDate = formData.birthday ? format(formData.birthday, 'yyyy-MM-dd') : null;
-      
+
       const response = await fetch(`${process.env.REACT_APP_API_DEV_BASE_URL}/users/${user?.id}/update-user`, {
         method: 'PATCH',
         headers: {
@@ -169,7 +168,7 @@ const DadosPessoais: React.FC = () => {
           duration: 5000,
           isClosable: true,
         });
-        navigate('/profile');
+        router.push('/me/profile');
       } else {
         throw new Error('Failed to update user data');
       }
@@ -212,7 +211,7 @@ const DadosPessoais: React.FC = () => {
         <IconButton
           icon={<ArrowBackIcon />}
           aria-label="Voltar"
-          onClick={() => navigate(-1)}
+          onClick={() =>  router.back}
           variant="ghost"
           mr={2}
         />
@@ -281,8 +280,8 @@ const DadosPessoais: React.FC = () => {
 
                 <FormControl>
                   <FormLabel fontWeight="bold">Data de Nascimento</FormLabel>
-                  <Box 
-                    bg={formData.birthday ? disabledBgColor : inputBgColor} 
+                  <Box
+                    bg={formData.birthday ? disabledBgColor : inputBgColor}
                     borderRadius="md"
                     borderWidth="1px"
                     borderColor="gray.200"
@@ -297,7 +296,7 @@ const DadosPessoais: React.FC = () => {
                       customInput={
                         <Input
                           isReadOnly
-                        
+
                           value={formData.birthday ? format(formData.birthday, 'dd/MM/yyyy') : ''}
                         />
                       }

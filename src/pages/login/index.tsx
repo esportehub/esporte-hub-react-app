@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { 
+import {
   Box,
   Input,
   Button,
@@ -22,16 +22,16 @@ import logo from "../../../src/assets/esporte-hub-logo.png";
 
 
 const LoginPage = () => {
+  const router = useRouter();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const toast = useToast();
-  const router = useRouter();
 
   const handleLogin = async () => {
     setIsLoading(true);
-    
+
     try {
       // Replace with your actual API call
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signin`, {
@@ -103,7 +103,7 @@ const LoginPage = () => {
             justifyContent="center"
           >
             <Image
-            src={logo.src}
+              src={logo.src}
               alt="Logo"
               width={200}
               height={120}
@@ -157,8 +157,8 @@ const LoginPage = () => {
           </InputGroup>
 
           <Box textAlign="right" mb={6}>
-            <Link 
-              href="/forgot-password" 
+            <Link
+              onClick={() => router.push('/login/forgot-password')}
               color="blue.500"
               fontSize="sm"
             >
@@ -213,8 +213,8 @@ const LoginPage = () => {
 
           <Text textAlign="center" color="gray.800">
             Ainda não tem cadastro?{' '}
-            <Link 
-              href="/register" 
+            <Link
+              href="/register"
               color="blue.500"
               fontWeight="semibold"
             >

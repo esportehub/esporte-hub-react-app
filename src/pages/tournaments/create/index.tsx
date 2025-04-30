@@ -42,6 +42,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FaCamera } from 'react-icons/fa';
 import { useRouter } from 'next/router';
+import DateInput from '../../../components/DateInput'
 
 interface FormData {
   eventName: string;
@@ -153,7 +154,7 @@ const TournamentCreationPage: React.FC = () => {
       };
 
       console.log('Submitting:', requestBody);
-      
+
       // Mock response
       const mockResponse = { id: Math.floor(Math.random() * 1000) };
       setCreatedTournamentId(mockResponse.id);
@@ -250,41 +251,31 @@ const TournamentCreationPage: React.FC = () => {
         </Heading>
 
         <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4} mb={4}>
-          <FormControl isRequired>
-            <FormLabel>Início das inscrições</FormLabel>
-            <DatePicker
-              selected={formData.registrationStart}
-              onChange={(date) => handleDateChange('registrationStart', date)}
-              locale={ptBR}
-            />
-          </FormControl>
+          <DateInput
+            label="Início das inscrições"
+            value={formData.registrationStart}
+            onChange={(e: any) => handleDateChange('registrationStart', e.target.value)}
+            dataMinima={new Date()}
+          />
 
-          <FormControl isRequired>
-            <FormLabel>Fim das inscrições</FormLabel>
-            <DatePicker
-              selected={formData.registrationEnd}
-              onChange={(date) => handleDateChange('registrationEnd', date)}
-              locale={ptBR}
-            />
-          </FormControl>
+          <DateInput
+            label="Fim das inscrições"
+            value={formData.registrationEnd}
+            onChange={(e: any) => handleDateChange('registrationEnd', e.target.value)}
+          />
 
-          <FormControl isRequired>
-            <FormLabel>Início dos jogos</FormLabel>
-            <DatePicker
-              selected={formData.tournamentStart}
-              onChange={(date) => handleDateChange('tournamentStart', date)}
-              locale={ptBR}
-            />
-          </FormControl>
+          <DateInput
+            label="Início dos jogos"
+            value={formData.tournamentStart}
+            onChange={(e: any) => handleDateChange('tournamentStart', e.target.value)}
+          />
 
-          <FormControl isRequired>
-            <FormLabel>Fim dos jogos</FormLabel>
-            <DatePicker
-              selected={formData.tournamentEnd}
-              onChange={(date) => handleDateChange('tournamentEnd', date)}
-              locale={ptBR}
-            />
-          </FormControl>
+
+          <DateInput
+            label="Fim dos jogos"
+            value={formData.tournamentEnd}
+            onChange={(e: any) => handleDateChange('tournamentEnd', e.target.value)}
+          />
         </Grid>
 
         {/* Registration Rules */}

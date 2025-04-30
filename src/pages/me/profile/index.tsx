@@ -121,7 +121,7 @@ const ProfilePage = () => {
   ];
 
   const profileButtons: ProfileButton[] = [
-    { icon: <IoPersonSharp color="blue.500" />, label: 'Dados Pessoais', action: () => router.push('/profile/personal-data') },
+    { icon: <IoPersonSharp color="blue.500" />, label: 'Dados Pessoais', action: () => router.push('/me/profile/personal-data') },
     { icon: <ChevronRightIcon boxSize={6} color="blue.500" />, label: 'Sair', action: handleLogout }
   ];
 

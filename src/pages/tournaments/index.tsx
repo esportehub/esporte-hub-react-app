@@ -333,7 +333,7 @@ const AllTournamentsPage = () => {
           <IconButton
             aria-label="Voltar"
             icon={<ChevronLeftIcon />}
-            onClick={() => router.push('/')}
+            onClick={() => router.back}
             mr={4}
           />
           <Heading size="lg" flex="1">

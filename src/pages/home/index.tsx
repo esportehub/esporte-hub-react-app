@@ -338,7 +338,7 @@ const HomePage = () => {
           name={user?.name} 
           size="sm" 
           cursor="pointer"
-          onClick={() => router.push('/me')}
+          onClick={() => router.push('/me/profile')}
           border={`2px solid ${primaryColor}`}
         />
       </Flex>
@@ -376,7 +376,7 @@ const HomePage = () => {
                   leftIcon={<FiPlus />}
                   variant="ghost"
                   colorScheme="green"
-                  onClick={() => router.push('/tournaments/creation')}
+                  onClick={() => router.push('/tournaments/create')}
                 >
                   Criar Torneio
                 </Button>
@@ -388,7 +388,7 @@ const HomePage = () => {
                   leftIcon={<FiPlus />}
                   variant="ghost"
                   colorScheme="green"
-                  onClick={() => router.push('/categories/creation')}
+                  onClick={() => router.push('/categories/create')}
                 >
                   Criar Categoria
                 </Button>
@@ -452,7 +452,7 @@ const HomePage = () => {
                     variant="ghost"
                     colorScheme="green"
                     onClick={() => {
-                      router.push('/tournaments/creation');
+                      router.push('/tournaments/create');
                       onClose();
                     }}
                   >

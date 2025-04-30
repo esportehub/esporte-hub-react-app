@@ -13,11 +13,12 @@ import {
   Flex
 } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/router';
+
 import axios from 'axios';
 
 const ForgotPasswordPage: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,7 @@ const ForgotPasswordPage: React.FC = () => {
 
       if (response.status === 200) {
         toast({ status: 'success', description: 'Email de recuperação enviado com sucesso!' });
-        navigate('/login');
+        router.push('/login');
       } else {
         toast({ status: 'error', description: 'Erro ao enviar email de recuperação' });
       }
@@ -64,7 +65,7 @@ const ForgotPasswordPage: React.FC = () => {
           <IconButton
             aria-label="Voltar"
             icon={<ArrowBackIcon />}
-            onClick={() => navigate(-1)}
+            onClick={() => router.push('/login')}
             mr={4}
           />
           <Heading size="md">Esqueci minha senha</Heading>
@@ -72,12 +73,6 @@ const ForgotPasswordPage: React.FC = () => {
       </Box>
 
       <Container maxW="md" py={10} display="flex" flexDirection="column" alignItems="center">
-        {!isMobile && (
-          <Flex align="center" w="100%" mb={4} cursor="pointer" onClick={() => navigate(-1)}>
-            <ArrowBackIcon mr={2} />
-            <Text>Voltar</Text>
-          </Flex>
-        )}
 
         <Heading as="h1" size="lg" mb={4} alignSelf="flex-start" fontWeight="600">
           Esqueceu sua senha?
