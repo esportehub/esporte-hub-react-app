@@ -1,35 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Flex,
-  Grid,
-  Heading,
-  Text,
-  Input,
-  InputGroup,
-  Button,
-  Avatar,
-  IconButton,
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerBody,
-  List,
-  ListItem,
-  useDisclosure,
-  Image,
-  Badge,
-  Stack,
-  Skeleton,
-  useToast,
-  DrawerOverlay,
-  DrawerCloseButton,
-  InputLeftElement,
-  Icon,
-} from '@chakra-ui/react';
-import { FiHelpCircle, FiMenu, FiSearch, FiLogOut, FiCheckCircle, FiX, FiCheck, FiHome, FiPlus, FiAward } from 'react-icons/fi';
+import { Box, Grid, Heading, Text, Input, InputGroup, Button, Badge, Stack, Skeleton, Icon, Image, useToast } from '@chakra-ui/react';
+import { FiHelpCircle, FiSearch, FiCheckCircle, FiX, FiCheck } from 'react-icons/fi';
 import { useRouter } from 'next/router';
-import logo from "../../../src/assets/esporte-hub-logo.png";
+import { useState, useEffect, useCallback } from 'react';
+import Layout from '@/components/Layout';
 
 interface Tournament {
   id: number;
@@ -41,12 +14,6 @@ interface Tournament {
   image: string;
 }
 
-interface User {
-  name: string;
-  email: string;
-  avatar: string;
-}
-
 interface StatusProps {
   color: string;
   icon: React.ElementType;
@@ -54,54 +21,15 @@ interface StatusProps {
 }
 
 const HomePage = () => {
-  const borderColor = 'gray.200';
-  const primaryColor = '#149E4C';
-
-  const bgColor = 'gray.50';
-  const cardBg = 'white';
-  const textColor = 'gray.700';
-
   const router = useRouter();
   const toast = useToast();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const isMobile = true;
-  
-  // State for the page
   const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>([]);
-  const [searchText, setSearchText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [user, setUser] = useState<User | null>(null);
 
-  // Fetch data on component mount
-  const fetchUserData = React.useCallback(async () => {
-    try {
-      // Mock data for demo
-      setUser({
-        name: 'John Doe',
-        email: 'john@example.com',
-        avatar: 'https://bit.ly/dan-abramov'
-      });
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar dados do usuário',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    }
-  }, [toast]);
-
-  const fetchFeaturedTournaments = React.useCallback(async () => {
+  const fetchFeaturedTournaments = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Mock data for demo
+      // Mock data
       setFeaturedTournaments([
         {
           id: 1,
@@ -123,33 +51,6 @@ const HomePage = () => {
         }
       ]);
     } catch (error) {
-      console.error('Error fetching featured tournaments:', error);
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar torneios em destaque',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  const fetchTournaments = React.useCallback(async () => {
-    if (currentPage === -1) return;
-    
-    setIsLoading(true);
-    try {
-      // Mock data for demo
-      const mockData: Tournament[] = [
-        // ... dados existentes
-      ];
-      
-      setTournaments(prev => [...prev, ...mockData]);
-      if (mockData.length === 0) setCurrentPage(-1);
-    } catch (error) {
-      console.error('Error fetching tournaments:', error);
       toast({
         title: 'Erro',
         description: 'Falha ao carregar torneios',
@@ -160,125 +61,51 @@ const HomePage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, toast]);
+  }, [toast]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      await fetchUserData();
-      await fetchFeaturedTournaments();
-      await fetchTournaments();
-    };
-    
-    fetchData();
-  }, [fetchUserData, fetchFeaturedTournaments, fetchTournaments]);
-
-  const loadMoreTournaments = () => {
-    setCurrentPage(prev => prev + 1);
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value);
-  };
+    fetchFeaturedTournaments();
+  }, [fetchFeaturedTournaments]);
 
   const getStatusProps = (status: Tournament['status']): StatusProps => {
     switch (status) {
-      case 'ativo':
-        return { 
-          color: 'green', 
-          icon: FiCheckCircle, 
-          text: 'Ativo' 
-        };
-      case 'cancelado':
-        return { 
-          color: 'red', 
-          icon: FiX, 
-          text: 'Cancelado' 
-        };
-      case 'concluido':
-        return { 
-          color: 'blue', 
-          icon: FiCheck, 
-          text: 'Concluído' 
-        };
-      case 'em_breve':
-        return { 
-          color: 'orange', 
-          icon: FiHelpCircle, 
-          text: 'Em breve' 
-        };
-      default:
-        return { 
-          color: 'gray', 
-          icon: FiHelpCircle, 
-          text: 'Desconhecido' 
-        };
+      case 'ativo': return { color: 'green', icon: FiCheckCircle, text: 'Ativo' };
+      case 'cancelado': return { color: 'red', icon: FiX, text: 'Cancelado' };
+      case 'concluido': return { color: 'blue', icon: FiCheck, text: 'Concluído' };
+      case 'em_breve': return { color: 'orange', icon: FiHelpCircle, text: 'Em breve' };
+      default: return { color: 'gray', icon: FiHelpCircle, text: 'Desconhecido' };
     }
   };
 
-  const renderTournamentCard = (tournament: Tournament, isFeatured: boolean = false) => {
+  const renderTournamentCard = (tournament: Tournament) => {
     const statusProps = getStatusProps(tournament.status);
     
     return (
       <Box
         key={tournament.id}
         onClick={() => router.push(`/tournament/${tournament.id}`)}
-        bg={cardBg}
+        bg="white"
         borderRadius="lg"
         overflow="hidden"
         boxShadow="md"
-        transition="all 0.2s"
-        _hover={{
-          transform: 'translateY(-4px)',
-          boxShadow: 'xl',
-          cursor: 'pointer'
-        }}
+        _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl', cursor: 'pointer' }}
         h="100%"
         display="flex"
         flexDirection="column"
       >
-        <Box
-          h={isFeatured ? "200px" : "160px"}
-          bg="gray.200"
-          overflow="hidden"
-          position="relative"
-        >
-          <Image
-            src={tournament.image}
-            alt={tournament.name}
-            objectFit="cover"
-            w="100%"
-            h="100%"
-          />
-          <Badge
-            position="absolute"
-            top="2"
-            right="2"
-            colorScheme={statusProps.color}
-            px="2"
-            py="1"
-            borderRadius="md"
-            display="flex"
-            alignItems="center"
-          >
+        <Box h="200px" bg="gray.200" overflow="hidden" position="relative">
+          <Image src={tournament.image} alt={tournament.name} objectFit="cover" w="100%" h="100%" />
+          <Badge position="absolute" top="2" right="2" colorScheme={statusProps.color} px="2" py="1" borderRadius="md">
             <Icon as={statusProps.icon} mr="1" />
             {statusProps.text}
           </Badge>
         </Box>
-        <Box p="4" flex="1" display="flex" flexDirection="column">
-          <Heading size="md" mb="2" noOfLines={1}>
-            {tournament.name}
-          </Heading>
-          
-          <Stack spacing="1" mt="auto">
-            <Text fontSize="sm" color={textColor}>
-              <Text as="span" fontWeight="semibold">Local:</Text> {tournament.location}
-            </Text>
-            <Text fontSize="sm" color={textColor}>
-              <Text as="span" fontWeight="semibold">Data:</Text> {tournament.date}
-            </Text>
-            <Text fontSize="sm" color={textColor}>
-              <Text as="span" fontWeight="semibold">Prêmio:</Text> R${tournament.prize.toLocaleString()}
-            </Text>
+        <Box p="4" flex="1">
+          <Heading size="md" mb="2" noOfLines={1}>{tournament.name}</Heading>
+          <Stack spacing="1">
+            <Text fontSize="sm"><Text as="span" fontWeight="semibold">Local:</Text> {tournament.location}</Text>
+            <Text fontSize="sm"><Text as="span" fontWeight="semibold">Data:</Text> {tournament.date}</Text>
+            <Text fontSize="sm"><Text as="span" fontWeight="semibold">Prêmio:</Text> R${tournament.prize.toLocaleString()}</Text>
           </Stack>
         </Box>
       </Box>
@@ -286,304 +113,23 @@ const HomePage = () => {
   };
 
   return (
-    <Box minH="100vh" bg={bgColor}>
-      {/* Header */}
-      <Flex
-        as="header"
-        bg="black"
-        color="white"
-        px={{ base: 4, md: 6 }}
-        py={4}
-        align="center"
-        justify="space-between"
-        position="sticky"
-        top="0"
-        zIndex="sticky"
-        boxShadow="sm"
-      >
-        <Flex align="center">
-          {isMobile && (
-            <IconButton
-              icon={<FiMenu />}
-              variant="ghost"
-              color="white"
-              fontSize="20px"
-              mr={2}
-              onClick={onOpen}
-              aria-label="Abrir menu"
-            />
-          )}
-          
-          <Image 
-            src={logo.src}
-            alt="EsporteHub" 
-            h={{ base: '30px', md: '40px' }} 
-            objectFit="contain"
-          />
-        </Flex>
+    <Layout>
+      <Box bg="gray.50" p={{ base: 4, md: 6 }}>
+        <Heading size="xl" mb={6}>Torneios em Destaque</Heading>
         
-        {!isMobile && (
-          <Flex align="center" gap={2}>
-            <Button variant="ghost" colorScheme="green" color="white" _hover={{ bg: 'rgba(255,255,255,0.1)' }}>
-              Beach Tennis
-            </Button>
-            <Button variant="ghost" colorScheme="green" color="white" _hover={{ bg: 'rgba(255,255,255,0.1)' }}>
-              Futevolei
-            </Button>
-          </Flex>
+        {isLoading ? (
+          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
+            {[...Array(2)].map((_, i) => (
+              <Skeleton key={i} h="300px" borderRadius="lg" />
+            ))}
+          </Grid>
+        ) : (
+          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
+            {featuredTournaments.map(renderTournamentCard)}
+          </Grid>
         )}
-        
-        <Avatar 
-          src={user?.avatar} 
-          name={user?.name} 
-          size="sm" 
-          cursor="pointer"
-          onClick={() => router.push('/me/profile')}
-          border={`2px solid ${primaryColor}`}
-        />
-      </Flex>
-
-      {/* Main Content */}
-      <Flex>
-        {/* Sidebar - Desktop */}
-        {!isMobile && (
-          <Box
-            as="aside"
-            w="240px"
-            minH="calc(100vh - 72px)"
-            bg={cardBg}
-            borderRight="1px solid"
-            borderColor={borderColor}
-            py={4}
-          >
-            <List spacing={1} px={2}>
-              <ListItem>
-                <Button
-                  w="full"
-                  justifyContent="flex-start"
-                  leftIcon={<FiHome />}
-                  variant="ghost"
-                  colorScheme="green"
-                  onClick={() => router.push('/')}
-                >
-                  Início
-                </Button>
-              </ListItem>
-              <ListItem>
-                <Button
-                  w="full"
-                  justifyContent="flex-start"
-                  leftIcon={<FiPlus />}
-                  variant="ghost"
-                  colorScheme="green"
-                  onClick={() => router.push('/tournaments/create')}
-                >
-                  Criar Torneio
-                </Button>
-              </ListItem>
-              <ListItem>
-                <Button
-                  w="full"
-                  justifyContent="flex-start"
-                  leftIcon={<FiPlus />}
-                  variant="ghost"
-                  colorScheme="green"
-                  onClick={() => router.push('/categories/create')}
-                >
-                  Criar Categoria
-                </Button>
-              </ListItem>
-              <ListItem>
-                <Button
-                  w="full"
-                  justifyContent="flex-start"
-                  leftIcon={<FiAward />}
-                  variant="ghost"
-                  colorScheme="green"
-                  onClick={() => router.push('/tournaments')}
-                >
-                  Ver Torneios
-                </Button>
-              </ListItem>
-            </List>
-            
-            <Box mt="auto" px={2} pt={4}>
-              <Button
-                w="full"
-                leftIcon={<FiLogOut />}
-                colorScheme="red"
-                variant="outline"
-                onClick={() => router.push('/login')}
-              >
-                Sair
-              </Button>
-            </Box>
-          </Box>
-        )}
-
-        {/* Mobile Drawer */}
-        <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
-          <DrawerOverlay />
-          <DrawerContent bg={cardBg}>
-            <DrawerCloseButton />
-            <DrawerHeader borderBottomWidth="1px">Menu</DrawerHeader>
-            <DrawerBody>
-              <List spacing={3}>
-                <ListItem>
-                  <Button
-                    w="full"
-                    justifyContent="flex-start"
-                    leftIcon={<FiHome />}
-                    variant="ghost"
-                    colorScheme="green"
-                    onClick={() => {
-                      router.push('/');
-                      onClose();
-                    }}
-                  >
-                    Início
-                  </Button>
-                </ListItem>
-                <ListItem>
-                  <Button
-                    w="full"
-                    justifyContent="flex-start"
-                    leftIcon={<FiPlus />}
-                    variant="ghost"
-                    colorScheme="green"
-                    onClick={() => {
-                      router.push('/tournaments/create');
-                      onClose();
-                    }}
-                  >
-                    Criar Torneio
-                  </Button>
-                </ListItem>
-                <ListItem>
-                  <Button
-                    w="full"
-                    justifyContent="flex-start"
-                    leftIcon={<FiAward />}
-                    variant="ghost"
-                    colorScheme="green"
-                    onClick={() => {
-                      router.push('/tournaments');
-                      onClose();
-                    }}
-                  >
-                    Ver Torneios
-                  </Button>
-                </ListItem>
-              </List>
-              
-              <Box mt="8">
-                <Button
-                  w="full"
-                  leftIcon={<FiLogOut />}
-                  colorScheme="red"
-                  variant="outline"
-                  onClick={() => {
-                    router.push('/login');
-                    onClose();
-                  }}
-                >
-                  Sair
-                </Button>
-              </Box>
-            </DrawerBody>
-          </DrawerContent>
-        </Drawer>
-
-        {/* Main Content Area */}
-        <Box flex="1" p={{ base: 4, md: 6 }} maxW="1200px" mx="auto">
-          {/* Featured Tournaments */}
-          {featuredTournaments.length > 0 && (
-            <>
-              <Heading size="xl" mb={6} color={textColor}>
-                Torneios em Destaque
-              </Heading>
-              
-              <Grid
-                templateColumns={{
-                  base: '1fr',
-                  sm: 'repeat(2, 1fr)',
-                  lg: 'repeat(3, 1fr)'
-                }}
-                gap={6}
-                mb={10}
-              >
-                {featuredTournaments.map(tournament => 
-                  renderTournamentCard(tournament, true)
-                )}
-              </Grid>
-            </>
-          )}
-
-          {/* All Tournaments */}
-          <Heading size="xl" mb={6} color={textColor}>
-            Torneios e Rankings
-          </Heading>
-          
-          <InputGroup mb={6}>
-            <InputLeftElement pointerEvents="none">
-              <FiSearch color="gray.300" />
-            </InputLeftElement>
-            <Input
-              placeholder="Pesquise torneios e rankings"
-              value={searchText}
-              onChange={handleSearchChange}
-              bg={cardBg}
-            />
-          </InputGroup>
-          
-          {isLoading && filteredTournaments.length === 0 ? (
-            <Grid
-              templateColumns={{
-                base: '1fr',
-                sm: 'repeat(2, 1fr)',
-                lg: 'repeat(3, 1fr)'
-              }}
-              gap={6}
-            >
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} h="300px" borderRadius="lg" />
-              ))}
-            </Grid>
-          ) : filteredTournaments.length === 0 ? (
-            <Box textAlign="center" py={10}>
-              <Text fontSize="lg">
-                {searchText ? 'Nenhum torneio encontrado' : 'Nenhum torneio disponível'}
-              </Text>
-            </Box>
-          ) : (
-            <Grid
-              templateColumns={{
-                base: '1fr',
-                sm: 'repeat(2, 1fr)',
-                lg: 'repeat(3, 1fr)'
-              }}
-              gap={6}
-            >
-              {filteredTournaments.map(tournament => renderTournamentCard(tournament, false))}
-            </Grid>
-          )}
-          
-          {currentPage !== -1 && (
-            <Flex justify="center" mt={8}>
-              <Button
-                colorScheme="green"
-                variant="outline"
-                onClick={loadMoreTournaments}
-                isLoading={isLoading}
-    
-              >
-                {isLoading ? 'Carregando...' : 'Carregar mais'}
-              </Button>
-            </Flex>
-          )}
-        </Box>
-      </Flex>
-    </Box>
+      </Box>
+    </Layout>
   );
 };
 
