@@ -1,4 +1,4 @@
-import { Flex, IconButton, Image, Avatar, Button } from '@chakra-ui/react';
+import { Flex, IconButton, Image, Avatar, Button, Box } from '@chakra-ui/react';
 import { FiMenu, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import logo from "../../src/assets/esporte-hub-logo.png";
@@ -17,12 +17,11 @@ interface HeaderProps {
 const Header = ({ onOpen, user }: HeaderProps) => {
   const router = useRouter();
   const primaryColor = '#149E4C';
-  const isMobile = true; // Ou sua lógica para detectar mobile
+  const isMobile = true;
 
-  // Dados mockados para quando não houver usuário
   const mockUser = {
     name: 'Convidado',
-    avatar: undefined // Isso fará o Avatar mostrar o ícone padrão
+    avatar: undefined
   };
 
   const currentUser = user || mockUser;
@@ -41,19 +40,26 @@ const Header = ({ onOpen, user }: HeaderProps) => {
       zIndex="sticky"
       boxShadow="sm"
     >
-      <Flex align="center">
+      {/* Botão do menu (esquerda) */}
+      <Box flex="1">
         {isMobile && (
           <IconButton
             icon={<FiMenu />}
             variant="ghost"
             color="white"
             fontSize="20px"
-            mr={2}
             onClick={onOpen}
             aria-label="Abrir menu"
           />
         )}
-        
+      </Box>
+
+      {/* Logo (centro) */}
+      <Box 
+        position="absolute" 
+        left="50%"
+        transform="translateX(-50%)"
+      >
         <Image 
           src={logo.src}
           alt="EsporteHub" 
@@ -62,10 +68,11 @@ const Header = ({ onOpen, user }: HeaderProps) => {
           onClick={() => router.push('/')}
           cursor="pointer"
         />
-      </Flex>
-      
+      </Box>
+
+      {/* Botões de esporte (centro em desktop) */}
       {!isMobile && (
-        <Flex align="center" gap={2}>
+        <Flex align="center" gap={2} position="absolute" left="50%" transform="translateX(-50%)">
           <Button variant="ghost" colorScheme="green" color="white" _hover={{ bg: 'rgba(255,255,255,0.1)' }}>
             Beach Tennis
           </Button>
@@ -74,17 +81,20 @@ const Header = ({ onOpen, user }: HeaderProps) => {
           </Button>
         </Flex>
       )}
-      
-      <Avatar 
-        src={currentUser.avatar}
-        name={currentUser.name}
-        icon={!currentUser.avatar && !currentUser.name ? <FiUser /> : undefined}
-        size="sm" 
-        cursor="pointer"
-        onClick={() => router.push(user ? '/me/profile' : '/login')}
-        border={`2px solid ${primaryColor}`}
-        bg={!currentUser.avatar ? 'gray.600' : undefined}
-      />
+
+      {/* Avatar (direita) */}
+      <Box flex="1" display="flex" justifyContent="flex-end">
+        <Avatar 
+          src={currentUser.avatar}
+          name={currentUser.name}
+          icon={!currentUser.avatar && !currentUser.name ? <FiUser /> : undefined}
+          size="sm" 
+          cursor="pointer"
+          onClick={() => router.push(user ? '/me/profile' : '/login')}
+          border={`2px solid ${primaryColor}`}
+          bg={!currentUser.avatar ? 'gray.600' : undefined}
+        />
+      </Box>
     </Flex>
   );
 };

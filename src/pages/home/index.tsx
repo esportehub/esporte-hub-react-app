@@ -1,8 +1,24 @@
-import { Box, Grid, Heading, Text, Input, InputGroup, Button, Badge, Stack, Skeleton, Icon, Image, useToast } from '@chakra-ui/react';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Box,
+  Grid,
+  Heading,
+  Text,
+  Input,
+  InputGroup,
+  Button,
+  Badge,
+  Stack,
+  Skeleton,
+  useToast,
+  Icon,
+  Image,
+  Flex,
+} from '@chakra-ui/react';
 import { FiHelpCircle, FiSearch, FiCheckCircle, FiX, FiCheck } from 'react-icons/fi';
 import { useRouter } from 'next/router';
-import { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
+import { InputLeftElement } from '@chakra-ui/react';
 
 interface Tournament {
   id: number;
@@ -21,15 +37,25 @@ interface StatusProps {
 }
 
 const HomePage = () => {
+  const bgColor = 'gray.50';
+  const cardBg = 'white';
+  const textColor = 'gray.700';
+
   const router = useRouter();
   const toast = useToast();
+  
+  // State for the page
   const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>([]);
+  const [searchText, setSearchText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchFeaturedTournaments = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Mock data
+      // Mock data for demo
       setFeaturedTournaments([
         {
           id: 1,
@@ -53,7 +79,7 @@ const HomePage = () => {
     } catch (error) {
       toast({
         title: 'Erro',
-        description: 'Falha ao carregar torneios',
+        description: 'Falha ao carregar torneios em destaque',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -63,9 +89,47 @@ const HomePage = () => {
     }
   }, [toast]);
 
+  const fetchTournaments = useCallback(async () => {
+    if (currentPage === -1) return;
+    
+    setIsLoading(true);
+    try {
+      // Mock data for demo
+      const mockData: Tournament[] = [
+        // ... seus dados existentes
+      ];
+      
+      setTournaments(prev => [...prev, ...mockData]);
+      if (mockData.length === 0) setCurrentPage(-1);
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Falha ao carregar torneios',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage, toast]);
+
   useEffect(() => {
-    fetchFeaturedTournaments();
-  }, [fetchFeaturedTournaments]);
+    const fetchData = async () => {
+      await fetchFeaturedTournaments();
+      await fetchTournaments();
+    };
+    
+    fetchData();
+  }, [fetchFeaturedTournaments, fetchTournaments]);
+
+  const loadMoreTournaments = () => {
+    setCurrentPage(prev => prev + 1);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  };
 
   const getStatusProps = (status: Tournament['status']): StatusProps => {
     switch (status) {
@@ -77,35 +141,70 @@ const HomePage = () => {
     }
   };
 
-  const renderTournamentCard = (tournament: Tournament) => {
+  const renderTournamentCard = (tournament: Tournament, isFeatured: boolean = false) => {
     const statusProps = getStatusProps(tournament.status);
     
     return (
       <Box
         key={tournament.id}
         onClick={() => router.push(`/tournament/${tournament.id}`)}
-        bg="white"
+        bg={cardBg}
         borderRadius="lg"
         overflow="hidden"
         boxShadow="md"
-        _hover={{ transform: 'translateY(-4px)', boxShadow: 'xl', cursor: 'pointer' }}
+        transition="all 0.2s"
+        _hover={{
+          transform: 'translateY(-4px)',
+          boxShadow: 'xl',
+          cursor: 'pointer'
+        }}
         h="100%"
         display="flex"
         flexDirection="column"
       >
-        <Box h="200px" bg="gray.200" overflow="hidden" position="relative">
-          <Image src={tournament.image} alt={tournament.name} objectFit="cover" w="100%" h="100%" />
-          <Badge position="absolute" top="2" right="2" colorScheme={statusProps.color} px="2" py="1" borderRadius="md">
+        <Box
+          h={isFeatured ? "200px" : "160px"}
+          bg="gray.200"
+          overflow="hidden"
+          position="relative"
+        >
+          <Image
+            src={tournament.image}
+            alt={tournament.name}
+            objectFit="cover"
+            w="100%"
+            h="100%"
+          />
+          <Badge
+            position="absolute"
+            top="2"
+            right="2"
+            colorScheme={statusProps.color}
+            px="2"
+            py="1"
+            borderRadius="md"
+            display="flex"
+            alignItems="center"
+          >
             <Icon as={statusProps.icon} mr="1" />
             {statusProps.text}
           </Badge>
         </Box>
-        <Box p="4" flex="1">
-          <Heading size="md" mb="2" noOfLines={1}>{tournament.name}</Heading>
-          <Stack spacing="1">
-            <Text fontSize="sm"><Text as="span" fontWeight="semibold">Local:</Text> {tournament.location}</Text>
-            <Text fontSize="sm"><Text as="span" fontWeight="semibold">Data:</Text> {tournament.date}</Text>
-            <Text fontSize="sm"><Text as="span" fontWeight="semibold">Prêmio:</Text> R${tournament.prize.toLocaleString()}</Text>
+        <Box p="4" flex="1" display="flex" flexDirection="column">
+          <Heading size="md" mb="2" noOfLines={1}>
+            {tournament.name}
+          </Heading>
+          
+          <Stack spacing="1" mt="auto">
+            <Text fontSize="sm" color={textColor}>
+              <Text as="span" fontWeight="semibold">Local:</Text> {tournament.location}
+            </Text>
+            <Text fontSize="sm" color={textColor}>
+              <Text as="span" fontWeight="semibold">Data:</Text> {tournament.date}
+            </Text>
+            <Text fontSize="sm" color={textColor}>
+              <Text as="span" fontWeight="semibold">Prêmio:</Text> R${tournament.prize.toLocaleString()}
+            </Text>
           </Stack>
         </Box>
       </Box>
@@ -114,20 +213,94 @@ const HomePage = () => {
 
   return (
     <Layout>
-      <Box bg="gray.50" p={{ base: 4, md: 6 }}>
-        <Heading size="xl" mb={6}>Torneios em Destaque</Heading>
-        
-        {isLoading ? (
-          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
-            {[...Array(2)].map((_, i) => (
-              <Skeleton key={i} h="300px" borderRadius="lg" />
-            ))}
-          </Grid>
-        ) : (
-          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }} gap={6}>
-            {featuredTournaments.map(renderTournamentCard)}
-          </Grid>
-        )}
+      <Box minH="100vh" bg={bgColor}>
+        {/* Main Content Area */}
+        <Box flex="1" p={{ base: 4, md: 6 }} maxW="1200px" mx="auto">
+          {/* Featured Tournaments */}
+          {featuredTournaments.length > 0 && (
+            <>
+              <Heading size="xl" mb={6} color={textColor}>
+                Torneios em Destaque
+              </Heading>
+              
+              <Grid
+                templateColumns={{
+                  base: '1fr',
+                  sm: 'repeat(2, 1fr)',
+                  lg: 'repeat(3, 1fr)'
+                }}
+                gap={6}
+                mb={10}
+              >
+                {featuredTournaments.map(tournament => 
+                  renderTournamentCard(tournament, true)
+                )}
+              </Grid>
+            </>
+          )}
+
+          {/* All Tournaments */}
+          <Heading size="xl" mb={6} color={textColor}>
+            Torneios e Rankings
+          </Heading>
+          
+          <InputGroup mb={6}>
+            <InputLeftElement pointerEvents="none">
+              <FiSearch color="gray.300" />
+            </InputLeftElement>
+            <Input
+              placeholder="Pesquise torneios e rankings"
+              value={searchText}
+              onChange={handleSearchChange}
+              bg={cardBg}
+            />
+          </InputGroup>
+          
+          {isLoading && filteredTournaments.length === 0 ? (
+            <Grid
+              templateColumns={{
+                base: '1fr',
+                sm: 'repeat(2, 1fr)',
+                lg: 'repeat(3, 1fr)'
+              }}
+              gap={6}
+            >
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} h="300px" borderRadius="lg" />
+              ))}
+            </Grid>
+          ) : filteredTournaments.length === 0 ? (
+            <Box textAlign="center" py={10}>
+              <Text fontSize="lg">
+                {searchText ? 'Nenhum torneio encontrado' : 'Nenhum torneio disponível'}
+              </Text>
+            </Box>
+          ) : (
+            <Grid
+              templateColumns={{
+                base: '1fr',
+                sm: 'repeat(2, 1fr)',
+                lg: 'repeat(3, 1fr)'
+              }}
+              gap={6}
+            >
+              {filteredTournaments.map(tournament => renderTournamentCard(tournament, false))}
+            </Grid>
+          )}
+          
+          {currentPage !== -1 && (
+            <Flex justify="center" mt={8}>
+              <Button
+                colorScheme="green"
+                variant="outline"
+                onClick={loadMoreTournaments}
+                isLoading={isLoading}
+              >
+                {isLoading ? 'Carregando...' : 'Carregar mais'}
+              </Button>
+            </Flex>
+          )}
+        </Box>
       </Box>
     </Layout>
   );
