@@ -65,7 +65,7 @@ const Header = ({ onOpen, user }: HeaderProps) => {
           alt="EsporteHub" 
           h={{ base: '30px', md: '40px' }} 
           objectFit="contain"
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/home')}
           cursor="pointer"
         />
       </Box>
