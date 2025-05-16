@@ -482,7 +482,8 @@ const TournamentCreationPage: React.FC = () => {
             value={formData.tournamentRules}
             onChange={handleChange}
             rows={4}
-          />
+            
+          /> 
         </FormControl>
 
         {/* Submit Button */}
