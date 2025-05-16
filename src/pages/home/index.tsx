@@ -28,6 +28,7 @@ interface Tournament {
   prize: number;
   status: 'ativo' | 'cancelado' | 'concluido' | 'em_breve';
   image: string;
+  type: 'torneio' | 'ranking';
 }
 
 interface StatusProps {
@@ -52,6 +53,22 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Filter tournaments when search text or tournaments change
+  useEffect(() => {
+    if (searchText.trim() === '') {
+      setFilteredTournaments(tournaments);
+    } else {
+      const searchLower = searchText.toLowerCase();
+      setFilteredTournaments(
+        tournaments.filter(tournament =>
+          tournament.name.toLowerCase().includes(searchLower) ||
+          tournament.location.toLowerCase().includes(searchLower) ||
+          tournament.type.toLowerCase().includes(searchLower)
+        )
+      );
+    }
+  }, [searchText, tournaments]);
+
   const fetchFeaturedTournaments = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -64,7 +81,8 @@ const HomePage = () => {
           date: '15/12/2023',
           prize: 5000,
           status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+          image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'torneio'
         },
         {
           id: 2,
@@ -73,7 +91,18 @@ const HomePage = () => {
           date: '20/01/2024',
           prize: 10000,
           status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+          image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'torneio'
+        },
+        {
+          id: 3,
+          name: 'Ranking Nacional',
+          location: 'Brasil',
+          date: 'Atualizado mensalmente',
+          prize: 0,
+          status: 'ativo',
+          image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'ranking'
         }
       ]);
     } catch (error) {
@@ -96,7 +125,76 @@ const HomePage = () => {
     try {
       // Mock data for demo
       const mockData: Tournament[] = [
-        // ... seus dados existentes
+        {
+          id: 4,
+          name: 'Torneio Amador',
+          location: 'Parque Esportivo',
+          date: '05/01/2024',
+          prize: 2000,
+          status: 'ativo',
+          image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'torneio'
+        },
+        {
+          id: 5,
+          name: 'Liga Profissional',
+          location: 'Arena Esportiva',
+          date: '10/02/2024',
+          prize: 15000,
+          status: 'ativo',
+          image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'torneio'
+        },
+        {
+          id: 6,
+          name: 'Torneio de Inverno',
+          location: 'Ginásio Municipal',
+          date: '25/07/2024',
+          prize: 8000,
+          status: 'em_breve',
+          image: 'https://images.unsplash.com/photo-1521412644187-c49fa049e84d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'torneio'
+        },
+        {
+          id: 7,
+          name: 'Ranking Estadual',
+          location: 'Rio de Janeiro',
+          date: 'Atualizado semanalmente',
+          prize: 0,
+          status: 'ativo',
+          image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'ranking'
+        },
+        {
+          id: 8,
+          name: 'Copa das Praias',
+          location: 'Praia de Ipanema',
+          date: '15/03/2024',
+          prize: 12000,
+          status: 'ativo',
+          image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'torneio'
+        },
+        {
+          id: 9,
+          name: 'Ranking Municipal',
+          location: 'São Paulo',
+          date: 'Atualizado quinzenalmente',
+          prize: 0,
+          status: 'ativo',
+          image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'ranking'
+        },
+        {
+          id: 10,
+          name: 'Torneio Primavera',
+          location: 'Clube Campestre',
+          date: '10/09/2024',
+          prize: 7500,
+          status: 'em_breve',
+          image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+          type: 'torneio'
+        }
       ];
       
       setTournaments(prev => [...prev, ...mockData]);
@@ -189,6 +287,17 @@ const HomePage = () => {
             <Icon as={statusProps.icon} mr="1" />
             {statusProps.text}
           </Badge>
+          <Badge
+            position="absolute"
+            top="2"
+            left="2"
+            colorScheme={tournament.type === 'ranking' ? 'purple' : 'teal'}
+            px="2"
+            py="1"
+            borderRadius="md"
+          >
+            {tournament.type === 'ranking' ? 'Ranking' : 'Torneio'}
+          </Badge>
         </Box>
         <Box p="4" flex="1" display="flex" flexDirection="column">
           <Heading size="md" mb="2" noOfLines={1}>
@@ -202,9 +311,11 @@ const HomePage = () => {
             <Text fontSize="sm" color={textColor}>
               <Text as="span" fontWeight="semibold">Data:</Text> {tournament.date}
             </Text>
-            <Text fontSize="sm" color={textColor}>
-              <Text as="span" fontWeight="semibold">Prêmio:</Text> R${tournament.prize.toLocaleString()}
-            </Text>
+            {tournament.type === 'torneio' && (
+              <Text fontSize="sm" color={textColor}>
+                <Text as="span" fontWeight="semibold">Prêmio:</Text> R${tournament.prize.toLocaleString()}
+              </Text>
+            )}
           </Stack>
         </Box>
       </Box>
@@ -249,7 +360,7 @@ const HomePage = () => {
               <FiSearch color="gray.300" />
             </InputLeftElement>
             <Input
-              placeholder="Pesquise torneios e rankings"
+              placeholder="Pesquise torneios e rankings (nome, local ou tipo)"
               value={searchText}
               onChange={handleSearchChange}
               bg={cardBg}
@@ -265,14 +376,14 @@ const HomePage = () => {
               }}
               gap={6}
             >
-              {[...Array(3)].map((_, i) => (
+              {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} h="300px" borderRadius="lg" />
               ))}
             </Grid>
           ) : filteredTournaments.length === 0 ? (
             <Box textAlign="center" py={10}>
               <Text fontSize="lg">
-                {searchText ? 'Nenhum torneio encontrado' : 'Nenhum torneio disponível'}
+                {searchText ? 'Nenhum torneio ou ranking encontrado' : 'Nenhum torneio ou ranking disponível'}
               </Text>
             </Box>
           ) : (

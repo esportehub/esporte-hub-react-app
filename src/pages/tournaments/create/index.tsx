@@ -43,6 +43,7 @@ import { ptBR } from 'date-fns/locale';
 import { FaCamera } from 'react-icons/fa';
 import { useRouter } from 'next/router';
 import DateInput from '../../../components/DateInput'
+import Layout from '@/components/Layout';
 
 interface FormData {
   eventName: string;
@@ -170,6 +171,8 @@ const TournamentCreationPage: React.FC = () => {
   };
 
   return (
+
+    <Layout>
     <Container maxW="container.md" py={8}>
       {/* Header */}
       <Flex align="center" mb={8}>
@@ -545,6 +548,7 @@ const TournamentCreationPage: React.FC = () => {
         </ModalContent>
       </Modal>
     </Container>
+    </Layout>
   );
 };
 
