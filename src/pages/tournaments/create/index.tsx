@@ -1,3 +1,4 @@
+//@typescript-eslint/no-explicit-any
 import React, { useState } from 'react';
 import {
   Box,
@@ -18,12 +19,9 @@ import {
   ModalHeader,
   ModalFooter,
   ModalBody,
-  ModalCloseButton,
   useDisclosure,
   Stack,
   Grid,
-  GridItem,
-  CircularProgress,
   InputGroup,
   InputLeftAddon,
   InputRightElement,
@@ -32,14 +30,10 @@ import {
 } from '@chakra-ui/react';
 import {
   ArrowBackIcon,
-  CheckIcon,
   CheckCircleIcon,
   CloseIcon,
-  QuestionIcon
 } from '@chakra-ui/icons';
-import DatePicker from 'react-datepicker';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { FaCamera } from 'react-icons/fa';
 import { useRouter } from 'next/router';
 import DateInput from '../../../components/DateInput'
@@ -76,6 +70,7 @@ const TournamentCreationPage: React.FC = () => {
   const { isOpen: isSuccessOpen, onOpen: onSuccessOpen, onClose: onSuccessClose } = useDisclosure();
   const { isOpen: isErrorOpen, onOpen: onErrorOpen, onClose: onErrorClose } = useDisclosure();
   const [errorMessage, setErrorMessage] = useState('');
+  //@typescript-eslint/no-unused-vars
   const [createdTournamentId, setCreatedTournamentId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
@@ -257,6 +252,7 @@ const TournamentCreationPage: React.FC = () => {
           <DateInput
             label="Início das inscrições"
             value={formData.registrationStart}
+
             onChange={(e: any) => handleDateChange('registrationStart', e.target.value)}
             dataMinima={new Date()}
           />

@@ -1,3 +1,5 @@
+//@typescript-eslint/no-unused-vars
+//@typescript-eslint/no-explicit-any
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import {
@@ -27,7 +29,6 @@ import {
   Stack,
   Text,
   useToast,
-  Progress,
   CircularProgress,
   Alert,
   IconButton

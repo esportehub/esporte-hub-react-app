@@ -18,7 +18,6 @@ import {
   AlertIcon
 } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
-import axios from 'axios';
 import { cpf as cpfValidator } from 'cpf-cnpj-validator';
 
 interface User {
@@ -58,6 +57,7 @@ const TournamentRegistrationPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  //@typescript-eslint/no-unused-vars
   const [tournament, setTournament] = useState<Tournament | null>(null);
   
   const [formData, setFormData] = useState<FormData>({

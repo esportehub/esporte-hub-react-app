@@ -108,7 +108,7 @@ const HomePage = () => {
     } catch (error) {
       toast({
         title: 'Erro',
-        description: 'Falha ao carregar torneios em destaque',
+        description: 'Falha ao carregar torneios em destaque: '+error,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -202,7 +202,7 @@ const HomePage = () => {
     } catch (error) {
       toast({
         title: 'Erro',
-        description: 'Falha ao carregar torneios',
+        description: 'Falha ao carregar torneios: '+error,
         status: 'error',
         duration: 5000,
         isClosable: true,

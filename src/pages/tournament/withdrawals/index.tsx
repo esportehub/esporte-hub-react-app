@@ -8,11 +8,8 @@ import {
   Grid,
   GridItem,
   Card,
-  CardHeader,
   CardBody,
-  CardFooter,
   IconButton,
-  Button,
   useToast,
   Alert,
   AlertIcon,
@@ -22,7 +19,6 @@ import {
 } from '@chakra-ui/react';
 import { ArrowBackIcon, ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { FaMoneyBillWave, FaCheckCircle, FaHourglassHalf, FaUsers } from 'react-icons/fa';
-import axios from 'axios';
 
 interface DataCollection {
   totalSubscribedPlayers: string;
@@ -34,6 +30,7 @@ interface DataCollection {
 const TournamentWithdrawalsPage: React.FC = () => {
   const { tournamentId } = useParams<{ tournamentId: string }>();
   const navigate = useNavigate();
+  //@typescript-eslint/no-unused-vars
   const toast = useToast();
   
   const [isAdmin, setIsAdmin] = useState(false);

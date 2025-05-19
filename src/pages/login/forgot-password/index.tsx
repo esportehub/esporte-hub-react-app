@@ -22,7 +22,6 @@ const ForgotPasswordPage: React.FC = () => {
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const isMobile = useBreakpointValue({ base: true, md: false });
   const bgColor = useColorModeValue('gray.50', 'gray.800');
   const inputBg = useColorModeValue('white', 'gray.700');
   const textSecondary = useColorModeValue('gray.600', 'gray.400');
@@ -48,10 +47,10 @@ const ForgotPasswordPage: React.FC = () => {
       } else {
         toast({ status: 'error', description: 'Erro ao enviar email de recuperação' });
       }
-    } catch (error: any) {
+    } catch (error) {
       toast({
         status: 'error',
-        description: error.response?.data?.message || 'Erro ao enviar email de recuperação'
+        description: 'Erro ao enviar email de recuperação:' +error
       });
     } finally {
       setLoading(false);

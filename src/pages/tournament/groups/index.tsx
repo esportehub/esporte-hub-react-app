@@ -64,6 +64,7 @@ const TournamentGroupsPage: React.FC = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [categoryRegistrations, setCategoryRegistrations] = useState<CategoryRegistration[]>([]);
+  // @typescript-eslint/no-unused-vars
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const { isOpen: isProblemDialogOpen, onOpen: onProblemDialogOpen, onClose: onProblemDialogClose } = useDisclosure();
   const [problemType, setProblemType] = useState<string>('');
@@ -160,6 +161,7 @@ const TournamentGroupsPage: React.FC = () => {
     }
   };
 
+  //@typescript-eslint/no-unused-vars
   const getPlayerById = (playerId: string): Player | null => {
     for (const registration of categoryRegistrations) {
       if (registration.player1?.id === playerId) return registration.player1;

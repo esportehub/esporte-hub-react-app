@@ -18,7 +18,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  CircularProgress,
   IconButton,
   Flex,
   Grid,

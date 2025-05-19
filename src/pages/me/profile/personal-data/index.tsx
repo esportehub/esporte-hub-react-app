@@ -24,7 +24,6 @@ import {
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { FaBirthdayCake } from 'react-icons/fa';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useRouter } from 'next/router';

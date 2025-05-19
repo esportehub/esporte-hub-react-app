@@ -11,10 +11,8 @@ import {
   Tab,
   TabPanel,
   List,
-  ListItem,
   Avatar,
   Text,
-  Divider,
   useColorModeValue
 } from '@chakra-ui/react';
 import { ChatIcon } from '@chakra-ui/icons';
@@ -36,6 +34,7 @@ const localizer = dateFnsLocalizer({
 
 const TournamentCalendarPage: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
+  //@typescript-eslint/no-unused-vars
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const bg = useColorModeValue('gray.100', 'gray.700');
@@ -86,6 +85,7 @@ const TournamentCalendarPage: React.FC = () => {
               view="month"
               onSelectEvent={setSelectedDate}
               onNavigate={setSelectedDate}
+              //@typescript-eslint/no-explicit-any
               eventPropGetter={(event:any) => ({
                 style: {
                   backgroundColor: event.type === 'upcoming' ? '#3182ce' : '#805ad5'
@@ -101,6 +101,7 @@ const TournamentCalendarPage: React.FC = () => {
               view="week"
               onSelectEvent={setSelectedDate}
               onNavigate={setSelectedDate}
+              //@typescript-eslint/no-explicit-any
               eventPropGetter={(event:any) => ({
                 style: {
                   backgroundColor: event.type === 'upcoming' ? '#3182ce' : '#805ad5'

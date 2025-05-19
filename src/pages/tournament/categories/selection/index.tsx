@@ -5,8 +5,6 @@ import {
   Heading,
   Avatar,
   Card,
-  CardBody,
-  CardHeader,
   Text,
   Button,
   IconButton,
@@ -15,16 +13,13 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
-  ModalCloseButton,
   Select,
   FormControl,
   FormLabel,
   Spinner,
   useDisclosure,
   Stack,
-  Divider,
   Checkbox,
   ListItem,
   useToast,
@@ -33,6 +28,7 @@ import {
 } from '@chakra-ui/react';
 import { ArrowBackIcon, CloseIcon } from '@chakra-ui/icons';
 import axios from 'axios';
+//@typescript-eslint/no-unused-vars
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRouter } from 'next/router';
 
