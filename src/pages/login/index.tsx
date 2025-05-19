@@ -35,6 +35,7 @@ const LoginPage = () => {
         title: 'Autenticado com sucesso!',
         status: 'success',
         duration: 5000,
+        position: 'top',    
         isClosable: true,
       });
       router.push('/home');
@@ -44,6 +45,7 @@ const LoginPage = () => {
         description: error.message || 'Erro desconhecido',
         status: 'error',
         duration: 5000,
+        position: 'top',
         isClosable: true,
       });
     } finally {
