@@ -42,6 +42,7 @@ import {
 } from '@chakra-ui/icons';
 import { IoFilterOutline } from 'react-icons/io5';
 import axios from 'axios';
+import Layout from '@/components/Layout';
 
 interface Tournament {
   id: string;
@@ -330,6 +331,7 @@ const AllTournamentsPage = () => {
   };
 
   return (
+    <Layout>
     <Box flex="1">
       <Flex as="header" bg="white" boxShadow="sm" position="sticky" top="0" zIndex="sticky">
         <Flex align="center" p={4} w="full" maxW="container.xl" mx="auto">
@@ -419,6 +421,7 @@ const AllTournamentsPage = () => {
         </ModalContent>
       </Modal>
     </Box>
+    </Layout>
   );
 };
 
