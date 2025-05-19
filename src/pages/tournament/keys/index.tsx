@@ -1,5 +1,5 @@
+import { useRouter } from 'next/router';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -43,7 +43,7 @@ interface Match {
 }
 
 const TournamentKeysPage: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   
   // Sample player data
   const initialMatches: Match[] = [
@@ -193,7 +193,7 @@ const TournamentKeysPage: React.FC = () => {
         <IconButton
           aria-label="Go back"
           icon={<ArrowBackIcon />}
-          onClick={() => navigate(-1)}
+          onClick={() => router.back}
           mr={4}
         />
         <Heading size="lg">Chaves da categoria</Heading>

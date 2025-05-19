@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import {
   Box,
   Flex,
@@ -51,7 +52,7 @@ interface FormErrors {
 
 const TournamentRegistrationPage: React.FC = () => {
   const { tournamentId } = useParams<{ tournamentId: string }>();
-  const navigate = useNavigate();
+  const router = useRouter();
   const toast = useToast();
   
   const [loading, setLoading] = useState(true);
@@ -196,16 +197,18 @@ const TournamentRegistrationPage: React.FC = () => {
         */
       }
       
-      navigate(`/tournament/${tournamentId}/categories`, {
-        state: {
+      router.push({
+        pathname: `/tournament/${tournamentId}/categories`,
+        query: {
           shirtSize,
           userGender: gender,
-          user: {
+          // Para objetos complexos, serialize para string
+          user: JSON.stringify({
             ...user,
             document: formData.document,
             phone: formData.phone,
             gender
-          }
+          })
         }
       });
     } catch (err) {
@@ -254,7 +257,7 @@ const TournamentRegistrationPage: React.FC = () => {
           aria-label="Voltar"
           icon={<ArrowBackIcon />}
           mr={4}
-          onClick={() => navigate(-1)}
+          onClick={() => router.back}
         />
         <Heading size="md" flexGrow={1}>
           Inscrição de torneio

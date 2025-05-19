@@ -204,7 +204,7 @@ const DadosPessoais: React.FC = () => {
         as="header"
         align="center"
         p={4}
-        bg={useColorModeValue('white', 'gray.800')}
+        bg={inputBgColor}
         boxShadow="sm"
       >
         <IconButton

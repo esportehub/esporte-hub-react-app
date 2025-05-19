@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useRouter } from 'next/router';
 import 'react-toastify/dist/ReactToastify.css';
 import {
   Box,
@@ -49,11 +49,10 @@ interface Tournament {
 
 interface User {
   id: string;
-  // Add other user properties as needed
 }
 
 const TournamentView: React.FC = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -62,7 +61,6 @@ const TournamentView: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  //@typescript-eslint/no-unused-vars
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const { isOpen: isFilterOpen, onOpen: onFilterOpen, onClose: onFilterClose } = useDisclosure();
@@ -99,17 +97,13 @@ const TournamentView: React.FC = () => {
   }, [user]);
 
   const fetchUser = async (): Promise<User> => {
-    //@typescript-eslint/no-unused-vars
     const token = localStorage.getItem('authToken');
-    // Mock implementation - replace with actual API call
     const mockUser: User = { id: '1' };
     setUser(mockUser);
     return mockUser;
   };
 
-    //@typescript-eslint/no-unused-vars
   const fetchTournament = async (tournamentId: string): Promise<Tournament> => {
-    // Mock implementation - replace with actual API call
     return {
       id: tournamentId,
       eventName: 'Mock Tournament',
@@ -119,10 +113,8 @@ const TournamentView: React.FC = () => {
     };
   };
 
-  //@typescript-eslint/no-unused-vars
   const fetchTournamentsRegistrations = async (userId: string) => {
     try {
-      // Mock implementation - replace with actual API call
       const mockTournaments: Tournament[] = [
         {
           id: '1',
@@ -148,7 +140,6 @@ const TournamentView: React.FC = () => {
 
   const fetchTournaments = async () => {
     try {
-      // Mock implementation - replace with actual API call
       const mockTournaments: Tournament[] = [
         {
           id: '1',
@@ -188,7 +179,6 @@ const TournamentView: React.FC = () => {
   };
 
   const checkUserRole = async () => {
-    // Mock implementation - replace with actual API call
     setIsAdmin(true);
   };
 
@@ -214,7 +204,6 @@ const TournamentView: React.FC = () => {
     }
   };
 
-  //@typescript-eslint/no-unused-vars
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'ativo': return <CheckCircleIcon />;
@@ -246,7 +235,6 @@ const TournamentView: React.FC = () => {
     toast.success('Filtros aplicados!');
   };
 
-  //@typescript-eslint/no-unused-vars
   const handlePageChange = (value: number) => {
     setCurrentPage(value);
   };
@@ -257,7 +245,7 @@ const TournamentView: React.FC = () => {
         key={tournament.id} 
         mb={4} 
         cursor="pointer"
-        onClick={() => navigate(`/tournament/${tournament.id}`)}
+        onClick={() => router.push(`/tournament/${tournament.id}`)}
         bg={cardBg}
       >
         <CardBody>
@@ -285,7 +273,6 @@ const TournamentView: React.FC = () => {
 
   const renderTournamentList = (tournamentList: Tournament[]) => {
     const filteredTournaments = filterTournaments(tournamentList);
-    //@typescript-eslint/no-unused-vars
     const pageCount = Math.ceil(filteredTournaments.length / 5);
     const currentItems = filteredTournaments.slice(
       (currentPage - 1) * 5,
@@ -322,9 +309,6 @@ const TournamentView: React.FC = () => {
           <Box>
             {currentItems.map(tournament => buildTournamentCard(tournament))}
             <Flex justify="center" mt={4}>
-              /*
-               Adicionar paginacao aqui
-               */
             </Flex>
           </Box>
         )}
@@ -347,7 +331,7 @@ const TournamentView: React.FC = () => {
           <IconButton
             aria-label="Voltar"
             icon={<ArrowBackIcon />}
-            onClick={() => navigate('/')}
+            onClick={() => router.push('/')}
             mr={4}
           />
           <Heading size="lg" flex={1}>
@@ -357,7 +341,7 @@ const TournamentView: React.FC = () => {
             <IconButton
               aria-label="Criar torneio"
               icon={<AddIcon />}
-              onClick={() => navigate('/tournament/create')}
+              onClick={() => router.push('/tournament/create')}
               colorScheme="blue"
             />
           )}

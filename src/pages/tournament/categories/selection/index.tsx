@@ -1,3 +1,7 @@
+//@typescript-eslint/no-require-imports
+//@typescript-eslint/no-explicit-any
+//@typescript-eslint/no-unused-vars
+//@typescript-eslint/no-unused-expressions
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -29,7 +33,6 @@ import {
 import { ArrowBackIcon, CloseIcon } from '@chakra-ui/icons';
 import axios from 'axios';
 //@typescript-eslint/no-unused-vars
-import { useNavigate, useLocation } from 'react-router-dom';
 import { useRouter } from 'next/router';
 
 interface User {
@@ -53,16 +56,23 @@ interface Category {
 
 const TournamentCategorySelectionPage: React.FC = () => {
   const router = useRouter();
-  const location = useLocation();
   const toast = useToast();
   
-  const { tournamentId, user, userGender, shirtSize } = location.state as {
-    tournamentId: string;
-    user: User;
-    userGender: string;
-    shirtSize: string;
-  } || {};
-  
+  const [tournamentId, setTournamentId] = useState<string>('');
+  const [user, setUser] = useState<User>({
+    id: '',
+    name: '',
+    middleName: '',
+    email: '',
+    document: '',
+    phone: '',
+    gender: '',
+    imageHash: '',
+
+  });
+  const [userGender, setUserGender] = useState<string>('');
+  const [shirtSize, setShirtSize] = useState<string>('');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);

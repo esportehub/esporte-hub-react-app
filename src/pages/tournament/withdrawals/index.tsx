@@ -1,5 +1,6 @@
+import { useRouter } from 'next/router';
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Box,
   Flex,
@@ -29,7 +30,7 @@ interface DataCollection {
 
 const TournamentWithdrawalsPage: React.FC = () => {
   const { tournamentId } = useParams<{ tournamentId: string }>();
-  const navigate = useNavigate();
+  const router = useRouter();
   //@typescript-eslint/no-unused-vars
   const toast = useToast();
   
@@ -161,7 +162,7 @@ const TournamentWithdrawalsPage: React.FC = () => {
           aria-label="Voltar"
           icon={<ArrowBackIcon />}
           mr={4}
-          onClick={() => navigate(-1)}
+          onClick={() => router.back}
         />
         <Heading size="md" flexGrow={1}>
           Levantamentos

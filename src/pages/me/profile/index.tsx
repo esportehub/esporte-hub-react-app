@@ -1,3 +1,5 @@
+//@typescript-eslint/no-explicit-any
+//@typescript-eslint/no-unused-vars
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -18,8 +20,7 @@ import {
   ModalBody,
   ModalFooter,
   Stack,
-  Heading,
-  Image
+  Heading
 } from '@chakra-ui/react';
 import {
   ArrowBackIcon,

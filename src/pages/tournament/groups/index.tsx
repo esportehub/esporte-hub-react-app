@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
@@ -59,7 +60,7 @@ interface Group {
 
 const TournamentGroupsPage: React.FC = () => {
   const { tournamentId, categoryId } = useParams<{ tournamentId: string; categoryId: string }>();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState<boolean>(true);
   const [groups, setGroups] = useState<Group[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -257,10 +258,10 @@ const TournamentGroupsPage: React.FC = () => {
   };
 
   const navButtons = [
-    { label: 'Torneio', icon: <FaFutbol />, action: () => navigate(`/tournament/${tournamentId}`) },
+    { label: 'Torneio', icon: <FaFutbol />, action: () => router.push(`/tournament/${tournamentId}`) },
     { label: 'Classificação', icon: <FaTrophy />, action: () => {} },
     { label: 'Jogos grupos', icon: <FaUsers />, action: () => {} },
-    { label: 'Jogos finais', icon: <FaCalendarAlt />, action: () => navigate(`/tournament/${tournamentId}/bracket`) },
+    { label: 'Jogos finais', icon: <FaCalendarAlt />, action: () => router.push(`/tournament/${tournamentId}/bracket`) },
     { label: 'Regras', icon: <FaBook />, action: () => {} },
     { label: 'Relatar Problema', icon: <WarningIcon />, action: onProblemDialogOpen },
   ];
@@ -279,7 +280,7 @@ const TournamentGroupsPage: React.FC = () => {
         <IconButton
           aria-label="Go back"
           icon={<ArrowBackIcon />}
-          onClick={() => navigate(-1)}
+          onClick={() => router.back}
           mr={4}
         />
         <Heading size="lg" flexGrow={1}>

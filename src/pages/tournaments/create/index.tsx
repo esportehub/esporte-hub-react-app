@@ -1,4 +1,3 @@
-//@typescript-eslint/no-explicit-any
 import React, { useState } from 'react';
 import {
   Box,
@@ -347,7 +346,7 @@ const TournamentCreationPage: React.FC = () => {
                     value={formData.registrationFees[index]}
                     onChange={(e) => handleFeeChange(index, e.target.value)}
                   />
-                  <InputRightElement pointerEvents="none" children="R$" />
+                  <InputRightElement pointerEvents="none" />
                 </InputGroup>
               ))}
             </Stack>
@@ -363,7 +362,7 @@ const TournamentCreationPage: React.FC = () => {
                 value={formData.registrationFees[0]}
                 onChange={(e) => handleFeeChange(0, e.target.value)}
               />
-              <InputRightElement pointerEvents="none" children="R$" />
+              <InputRightElement pointerEvents="none" />
             </InputGroup>
           </FormControl>
         )}
@@ -467,7 +466,7 @@ const TournamentCreationPage: React.FC = () => {
               value={formData.prizeValue}
               onChange={handleChange}
             />
-            <InputRightElement pointerEvents="none" children="R$" />
+            <InputRightElement pointerEvents="none"/>
           </InputGroup>
         </FormControl>
 

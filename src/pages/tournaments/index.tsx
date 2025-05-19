@@ -1,5 +1,7 @@
-//@typescript-eslint/no-unused-vars
+//@typescript-eslint/no-require-imports
 //@typescript-eslint/no-explicit-any
+//@typescript-eslint/no-unused-vars
+//@typescript-eslint/no-unused-expressions
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import {
