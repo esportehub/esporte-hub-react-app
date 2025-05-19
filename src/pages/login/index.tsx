@@ -1,18 +1,8 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Input,
-  Button,
-  Heading,
-  Text,
-  IconButton,
-  InputGroup,
-  InputRightElement,
-  Container,
-  Link,
-  useToast,
-  Stack,
-  Center
+  Box, Input, Button, Heading, Text, IconButton,
+  InputGroup, InputRightElement, Container, Link,
+  useToast, Stack, Center
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';
@@ -20,6 +10,8 @@ import { FaGoogle, FaFacebook, FaTwitter, FaInstagram } from 'react-icons/fa';
 import Image from 'next/image';
 import logo from "../../../src/assets/esporte-hub-logo.png";
 
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { initFirebase } from '@/firebase/firebase'; // ajuste o caminho se estiver diferente
 
 const LoginPage = () => {
   const router = useRouter();
@@ -28,47 +20,28 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const toast = useToast();
+  const { auth } = initFirebase();
 
   const handleLogin = async () => {
     setIsLoading(true);
 
     try {
-      // Replace with your actual API call
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/signin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password
-        }),
-      });
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const token = await user.getIdToken();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('authToken', data.token);
-        toast({
-          title: 'Autenticado com sucesso!',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        });
-        router.push('/home');
-      } else {
-        toast({
-          title: 'Falha ao autenticar',
-          description: data.message || 'Erro desconhecido',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-    } catch (err) {
+      localStorage.setItem('authToken', token);
       toast({
-        title: 'Ocorreu um erro durante o login',
-        description: (err as Error).message,
+        title: 'Autenticado com sucesso!',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      router.push('/home');
+    } catch (error: any) {
+      toast({
+        title: 'Falha ao autenticar',
+        description: error.message || 'Erro desconhecido',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -88,20 +61,8 @@ const LoginPage = () => {
       p={4}
     >
       <Container maxW="container.sm">
-        <Box
-          bg="white"
-          borderRadius="md"
-          boxShadow="xl"
-          overflow="hidden"
-          mb={6}
-        >
-          <Box
-            bg="primary.500"
-            py={8}
-            px={6}
-            display="flex"
-            justifyContent="center"
-          >
+        <Box bg="white" borderRadius="md" boxShadow="xl" overflow="hidden" mb={6}>
+          <Box bg="primary.500" py={8} px={6} display="flex" justifyContent="center">
             <Image
               src={logo.src}
               alt="Logo"
@@ -116,12 +77,7 @@ const LoginPage = () => {
           </Box>
         </Box>
 
-        <Box
-          bg="white"
-          borderRadius="md"
-          boxShadow="xl"
-          p={8}
-        >
+        <Box bg="white" borderRadius="md" boxShadow="xl" p={8}>
           <Heading as="h1" size="xl" mb={4} color="gray.800" fontWeight="bold">
             Bora pro jogo?
           </Heading>
@@ -184,40 +140,16 @@ const LoginPage = () => {
 
           <Center mb={6}>
             <Stack direction="row" spacing={4}>
-              <IconButton
-                aria-label="Login com Google"
-                icon={<FaGoogle />}
-                colorScheme="red"
-                variant="outline"
-              />
-              <IconButton
-                aria-label="Login com Facebook"
-                icon={<FaFacebook />}
-                colorScheme="facebook"
-                variant="outline"
-              />
-              <IconButton
-                aria-label="Login com Twitter"
-                icon={<FaTwitter />}
-                colorScheme="twitter"
-                variant="outline"
-              />
-              <IconButton
-                aria-label="Login com Instagram"
-                icon={<FaInstagram />}
-                colorScheme="pink"
-                variant="outline"
-              />
+              <IconButton aria-label="Login com Google" icon={<FaGoogle />} colorScheme="red" variant="outline" />
+              <IconButton aria-label="Login com Facebook" icon={<FaFacebook />} colorScheme="facebook" variant="outline" />
+              <IconButton aria-label="Login com Twitter" icon={<FaTwitter />} colorScheme="twitter" variant="outline" />
+              <IconButton aria-label="Login com Instagram" icon={<FaInstagram />} colorScheme="pink" variant="outline" />
             </Stack>
           </Center>
 
           <Text textAlign="center" color="gray.800">
             Ainda não tem cadastro?{' '}
-            <Link
-              href="/register"
-              color="blue.500"
-              fontWeight="semibold"
-            >
+            <Link href="/register" color="blue.500" fontWeight="semibold">
               Cadastrar
             </Link>
           </Text>
