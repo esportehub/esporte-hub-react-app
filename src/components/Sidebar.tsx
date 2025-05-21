@@ -38,7 +38,7 @@ const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
             leftIcon={<FiHome />}
             variant="ghost"
             colorScheme="green"
-            onClick={() => handleNavigation('/')}
+            onClick={() => handleNavigation('/home')}
           >
             Início
           </Button>

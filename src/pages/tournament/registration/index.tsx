@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import { useRouter } from 'next/router';
 import {
   Box,
@@ -20,6 +19,7 @@ import {
 } from '@chakra-ui/react';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 import { cpf as cpfValidator } from 'cpf-cnpj-validator';
+import axios from 'axios';
 
 interface User {
   id: string;
@@ -33,86 +33,91 @@ interface User {
 
 interface Tournament {
   id: string;
-  // Add other tournament properties as needed
-}
-
-interface FormData {
   name: string;
-  email: string;
-  document: string;
-  phone: string;
-}
-
-interface FormErrors {
-  name?: string;
-  email?: string;
-  document?: string;
-  phone?: string;
 }
 
 const TournamentRegistrationPage: React.FC = () => {
-  const { tournamentId } = useParams<{ tournamentId: string }>();
   const router = useRouter();
+  const { tournamentId } = router.query;
   const toast = useToast();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  //@typescript-eslint/no-unused-vars
   const [tournament, setTournament] = useState<Tournament | null>(null);
   
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     document: '',
     phone: '',
   });
   
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<StandardFormErrors>({});
   const [shirtSize, setShirtSize] = useState('M');
   const [gender, setGender] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Mock data - replace with actual API calls
-        const mockUser: User = {
-          id: '1',
-          name: 'John',
-          middleName: 'Doe',
-          email: 'john.doe@example.com',
-          document: '',
-          phone: '',
-          gender: ''
-        };
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          throw new Error('Usuário não autenticado');
+        }
+
+        // Fetch user data
+        const userResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const userData = userResponse.data;
+        setUser(userData);
         
-        const mockTournament: Tournament = {
-          id: tournamentId || '1'
-        };
+        // Fetch tournament data
+        const tournamentResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/beach-tennis/tournaments/${tournamentId}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+
+        setTournament(tournamentResponse.data);
         
-        setUser(mockUser);
-        setTournament(mockTournament);
-        
+        // Set form data
         setFormData({
-          name: `${mockUser.name} ${mockUser.middleName || ''}`.trim(),
-          email: mockUser.email || '',
-          document: mockUser.document || '',
-          phone: mockUser.phone || '',
+          name: `${userData.name} ${userData.middleName || ''}`.trim(),
+          email: userData.email || '',
+          document: userData.document || '',
+          phone: userData.phone || '',
         });
         
-        setGender(mockUser.gender || '');
+        setGender(userData.gender || '');
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setLoading(false);
+        
+        toast({
+          title: 'Erro',
+          description: 'Falha ao carregar dados do usuário ou torneio',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
       }
     };
     
-    fetchData();
-  }, [tournamentId]);
+    if (tournamentId) {
+      fetchData();
+    }
+  }, [tournamentId, toast]);
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+    const newErrors: StandardFormErrors = {};
     
     if (!formData.name) newErrors.name = 'Nome é obrigatório';
     if (!formData.email) {
@@ -171,49 +176,69 @@ const TournamentRegistrationPage: React.FC = () => {
     }
   };
 
+  const updateUserInfo = async (userId: string) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${userId}/update-documents`,
+        {
+          document: formData.document,
+          phone: formData.phone,
+          gender: gender
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      return response.status === 200;
+    } catch (error) {
+      console.error('Error updating user info:', error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm() || !user) return;
+    if (!validateForm() || !user || !tournamentId) return;
 
     try {
+      setLoading(true);
+      
+      // Check if user needs to update info
       const needsUpdate = !user.document || !user.phone || !user.gender;
       
       if (needsUpdate) {
-        // In a real app, you would make an API call here
-        /*
-        await axios.patch(
-          `/users/${user.id}/update-documents`,
-          {
-            document: formData.document,
-            phone: formData.phone,
-            gender: gender
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`
-            }
-          }
-        );
-        */
+        const updateSuccess = await updateUserInfo(user.id);
+        if (!updateSuccess) {
+          throw new Error('Falha ao atualizar informações do usuário');
+        }
+        
+        toast({
+          title: 'Sucesso',
+          description: 'Informações atualizadas com sucesso!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
       }
       
+      // Redirect to category selection page
       router.push({
         pathname: `/tournament/${tournamentId}/categories`,
         query: {
           shirtSize,
           userGender: gender,
-          // Para objetos complexos, serialize para string
-          user: JSON.stringify({
-            ...user,
-            document: formData.document,
-            phone: formData.phone,
-            gender
-          })
+          userId: user.id
         }
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
+      
       toast({
         title: 'Erro',
         description: errorMessage,
@@ -221,12 +246,14 @@ const TournamentRegistrationPage: React.FC = () => {
         duration: 6000,
         isClosable: true,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <Flex justify="center" mt={8}>
+      <Flex justify="center" align="center" minH="100vh">
         <CircularProgress isIndeterminate />
       </Flex>
     );
@@ -234,10 +261,13 @@ const TournamentRegistrationPage: React.FC = () => {
 
   if (error) {
     return (
-      <Alert status="error" mb={4}>
-        <AlertIcon />
-        {error}
-      </Alert>
+      <Box p={4}>
+        <Alert status="error" mb={4}>
+          <AlertIcon />
+          {error}
+        </Alert>
+        <Button onClick={() => router.back()}>Voltar</Button>
+      </Box>
     );
   }
 
@@ -257,14 +287,14 @@ const TournamentRegistrationPage: React.FC = () => {
           aria-label="Voltar"
           icon={<ArrowBackIcon />}
           mr={4}
-          onClick={() => router.back}
+          onClick={() => router.back()}
         />
         <Heading size="md" flexGrow={1}>
-          Inscrição de torneio
+          {tournament?.name || 'Inscrição de torneio'}
         </Heading>
       </Flex>
 
-      <Box p={6}>
+      <Box maxW="container.md" mx="auto" p={6}>
         <Text mb={4}>
           Preencha e verifique os campos corretamente para inscrever-se neste torneio.
         </Text>
@@ -272,7 +302,7 @@ const TournamentRegistrationPage: React.FC = () => {
           Formulário de inscrição
         </Heading>
 
-        <Box as="form" onSubmit={handleSubmit}>
+        <Box as="form" onSubmit={handleSubmit} bg="white" p={6} borderRadius="md" boxShadow="sm">
           {/* Name Field */}
           <FormControl isInvalid={!!errors.name} mb={4}>
             <FormLabel>Nome do Atleta</FormLabel>
@@ -304,6 +334,7 @@ const TournamentRegistrationPage: React.FC = () => {
               name="document"
               value={formatCPF(formData.document)}
               onChange={handleCPFChange}
+              isReadOnly={!!user?.document}
             />
             {errors.document && <Text color="red.500">{errors.document}</Text>}
           </FormControl>
@@ -315,6 +346,7 @@ const TournamentRegistrationPage: React.FC = () => {
               name="phone"
               value={formatPhone(formData.phone)}
               onChange={handlePhoneChange}
+              isReadOnly={!!user?.phone}
             />
             {errors.phone && <Text color="red.500">{errors.phone}</Text>}
           </FormControl>
@@ -326,6 +358,7 @@ const TournamentRegistrationPage: React.FC = () => {
               value={gender}
               onChange={(e) => setGender(e.target.value)}
               placeholder="Selecione o gênero"
+              isDisabled={!!user?.gender}
             >
               <option value="Masculino">Masculino</option>
               <option value="Feminino">Feminino</option>
@@ -355,6 +388,7 @@ const TournamentRegistrationPage: React.FC = () => {
             colorScheme="blue"
             size="lg"
             mt={4}
+            isLoading={loading}
           >
             Continuar
           </Button>

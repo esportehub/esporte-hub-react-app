@@ -1,5 +1,3 @@
-//@typescript-eslint/no-explicit-any
-//@typescript-eslint/no-unused-vars
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import {
@@ -27,6 +25,7 @@ import {
 } from '@chakra-ui/react';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
 import { FaCamera } from 'react-icons/fa';
+import axios from 'axios';
 
 interface FormData {
   name: string;
@@ -45,11 +44,13 @@ const CategoryCreationPage = () => {
   const router = useRouter();
   const { tournamentId } = router.query;
   const toast = useToast();
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [createdCategoryId, setCreatedCategoryId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -72,14 +73,47 @@ const CategoryCreationPage = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedImage(URL.createObjectURL(file));
+      setSelectedImage(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadImage = async (categoryId: number) => {
+    if (!selectedImage) return false;
+
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedImage);
+
+      const token = localStorage.getItem('authToken');
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/images/${categoryId}/image/category`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      return response.status === 200;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return false;
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
     try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
       const requestBody = {
         tournament_id: tournamentId,
         name: formData.name,
@@ -94,13 +128,42 @@ const CategoryCreationPage = () => {
         max_age: parseInt(formData.maxAge) || 0
       };
 
-      console.log('Submitting:', requestBody);
-      setIsSuccessModalOpen(true);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/beach-tennis/categories`,
+        requestBody,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
+      if (response.status === 201) {
+        const categoryId = response.data.id;
+        setCreatedCategoryId(categoryId);
+        
+        // Upload da imagem se existir
+        if (selectedImage) {
+          await uploadImage(categoryId);
+        }
+
+        setIsSuccessModalOpen(true);
+      } else {
+        throw new Error(response.data.message || 'Erro ao criar categoria');
+      }
     } catch (error: any) {
       console.error('Error creating category:', error);
-      setErrorMessage(error.message || 'Failed to create category');
+      setErrorMessage(error.response?.data?.message || error.message || 'Erro desconhecido');
       setIsErrorModalOpen(true);
+      
+      toast({
+        title: 'Erro',
+        description: error.response?.data?.message || error.message || 'Erro ao criar categoria',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     } finally {
       setLoading(false);
     }
@@ -128,10 +191,10 @@ const CategoryCreationPage = () => {
         </Heading>
         <Flex align="center" gap={4}>
           <Avatar
-            src={selectedImage || undefined}
+            src={previewImage || undefined}
             borderRadius="md"
             size="xl"
-            icon={!selectedImage ? <FaCamera /> : undefined}
+            icon={!previewImage ? <FaCamera /> : undefined}
           />
           <Button
             as="label"
@@ -149,7 +212,7 @@ const CategoryCreationPage = () => {
             />
           </Button>
         </Flex>
-        {selectedImage && (
+        {previewImage && (
           <Text fontSize="sm" mt={2} color="gray.500">
             Imagem selecionada
           </Text>
