@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Box, Input, Button, Heading, Text, IconButton,
   InputGroup, InputRightElement, Container, Link,
-  useToast, Stack, Center
+  useToast, Stack, Center,
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/router';

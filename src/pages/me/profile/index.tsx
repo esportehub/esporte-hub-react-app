@@ -31,6 +31,7 @@ import {
 import { useRouter } from 'next/router';
 import { FaCamera } from 'react-icons/fa';
 import { IoPersonSharp, IoTennisballOutline } from 'react-icons/io5';
+import { useAuth } from '@/hooks/auth/useAuth';
 
 interface User {
   id: string;
@@ -62,42 +63,16 @@ interface ProfileButton {
 const ProfilePage = () => {
   const theme = useTheme();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, appUser, loading } = useAuth();
   const [userImage, setUserImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [logoutModal, setLogoutModal] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Mock data
-        const mockUser: User = {
-          id: '123',
-          firstName: 'John',
-          lastName: 'Doe',
-          username: 'johndoe',
-          about: 'Beach tennis enthusiast and tournament player',
-          imageUrl: '/assets/images/default-avatar.jpg',
-          stats: {
-            tournamentsPlayed: 10,
-            rankingsPlayed: 5,
-            activeTournaments: 2,
-            winStreak: 3
-          }
-        };
-        
-        setUser(mockUser);
-        setUserImage(mockUser.imageUrl);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
+    useEffect(() => {
+      if (user) {
+        console.log('Usuário autenticado:', user.name, user.email);
       }
-    };
-
-    fetchUserData();
-  }, []);
+    }, [user]);
 
   const handleImageUpload = () => {
     setUploadingImage(true);
@@ -115,10 +90,10 @@ const ProfilePage = () => {
   };
 
   const infoCards: InfoCard[] = [
-    { icon: <IoTennisballOutline />, title: 'Torneios jogados no ano', value: user?.stats?.tournamentsPlayed || '0' },
-    { icon: <StarIcon boxSize={6} />, title: 'Rankings jogados no ano', value: user?.stats?.rankingsPlayed || '0' },
-    { icon: <RepeatIcon boxSize={6} />, title: 'Torneios/Rankings em andamento', value: user?.stats?.activeTournaments || '0' },
-    { icon: <StarIcon boxSize={6} />, title: 'Sequência de vitórias', value: user?.stats?.winStreak || '0' }
+    { icon: <IoTennisballOutline />, title: 'Torneios jogados no ano', value: '1'},
+    { icon: <StarIcon boxSize={6} />, title: 'Rankings jogados no ano', value: '0' },
+    { icon: <RepeatIcon boxSize={6} />, title: 'Torneios/Rankings em andamento', value: '0' },
+    { icon: <StarIcon boxSize={6} />, title: 'Sequência de vitórias', value: '0' }
   ];
 
   const profileButtons: ProfileButton[] = [
@@ -163,7 +138,7 @@ const ProfilePage = () => {
           <Box position="relative" display="inline-block" mb={4}>
             <Avatar
               src={userImage || ''}
-              name={`${user?.firstName} ${user?.lastName}`}
+              name={`${appUser?.name} ${appUser?.middleName ?? ''}`}
               size="xl"
               border="4px solid"
               borderColor="blue.500"
@@ -183,7 +158,7 @@ const ProfilePage = () => {
           </Box>
 
           <Heading as="h2" size="lg" mb={2}>
-            {user?.firstName} {user?.lastName}
+            {appUser?.name} {appUser?.middleName ?? ''}
           </Heading>
           
           <Text 
@@ -192,11 +167,11 @@ const ProfilePage = () => {
             fontWeight="bold"
             mb={2}
           >
-            @{user?.username}
+            @{appUser?.username ?? '@no-username'}
           </Text>
           
           <Text color="gray.600" maxWidth="600px" mx="auto">
-            {user?.about || 'Sem informações cadastradas.'}
+            {appUser?.about || 'Sem informações cadastradas.'}
           </Text>
         </Box>
 

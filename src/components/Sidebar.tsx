@@ -1,9 +1,9 @@
 import { Box, List, ListItem, Button } from '@chakra-ui/react';
-import { 
-  FiHome, 
-  FiPlus, 
-  FiAward, 
-  FiLogOut 
+import {
+  FiHome,
+  FiPlus,
+  FiAward,
+  FiLogOut
 } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 
@@ -68,14 +68,18 @@ const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
           </Button>
         </ListItem>
       </List>
-      
+
       <Box mt="auto" px={2} pt={4}>
         <Button
           w="full"
           leftIcon={<FiLogOut />}
           colorScheme="red"
           variant="outline"
-          onClick={() => handleNavigation('/login')}
+          onClick={() => {
+            localStorage.removeItem('authToken');
+            handleNavigation('/login');
+            console.log('LocalStorage foi limpo.')
+           }}
         >
           Sair
         </Button>

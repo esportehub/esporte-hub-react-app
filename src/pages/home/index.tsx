@@ -19,7 +19,9 @@ import { FiHelpCircle, FiSearch, FiCheckCircle, FiX, FiCheck } from 'react-icons
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import { InputLeftElement } from '@chakra-ui/react';
-
+import { ca } from 'date-fns/locale';
+import { decodeToken } from '@/interfaces/DecodedToken';
+import { useAuth } from '@/hooks/auth/useAuth';
 interface Tournament {
   id: number;
   name: string;
@@ -44,7 +46,8 @@ const HomePage = () => {
 
   const router = useRouter();
   const toast = useToast();
-  
+  const { user, appUser } = useAuth();
+
   // State for the page
   const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -53,8 +56,17 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  useEffect(() => {
+    if (user) {
+      console.log('Usuário autenticado:', user.name, user.email);
+      // aqui pode chamar outras funções de carregamento+
+      console.log(appUser?.name);
+    }
+  }, [user]);
+
   // Filter tournaments when search text or tournaments change
   useEffect(() => {
+
     if (searchText.trim() === '') {
       setFilteredTournaments(tournaments);
     } else {
@@ -108,7 +120,7 @@ const HomePage = () => {
     } catch (error) {
       toast({
         title: 'Erro',
-        description: 'Falha ao carregar torneios em destaque: '+error,
+        description: 'Falha ao carregar torneios em destaque: ' + error,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -120,7 +132,7 @@ const HomePage = () => {
 
   const fetchTournaments = useCallback(async () => {
     if (currentPage === -1) return;
-    
+
     setIsLoading(true);
     try {
       // Mock data for demo
@@ -196,13 +208,13 @@ const HomePage = () => {
           type: 'torneio'
         }
       ];
-      
+
       setTournaments(prev => [...prev, ...mockData]);
       if (mockData.length === 0) setCurrentPage(-1);
     } catch (error) {
       toast({
         title: 'Erro',
-        description: 'Falha ao carregar torneios: '+error,
+        description: 'Falha ao carregar torneios: ' + error,
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -217,7 +229,7 @@ const HomePage = () => {
       await fetchFeaturedTournaments();
       await fetchTournaments();
     };
-    
+
     fetchData();
   }, [fetchFeaturedTournaments, fetchTournaments]);
 
@@ -241,7 +253,7 @@ const HomePage = () => {
 
   const renderTournamentCard = (tournament: Tournament, isFeatured: boolean = false) => {
     const statusProps = getStatusProps(tournament.status);
-    
+
     return (
       <Box
         key={tournament.id}
@@ -303,7 +315,7 @@ const HomePage = () => {
           <Heading size="md" mb="2" noOfLines={1}>
             {tournament.name}
           </Heading>
-          
+
           <Stack spacing="1" mt="auto">
             <Text fontSize="sm" color={textColor}>
               <Text as="span" fontWeight="semibold">Local:</Text> {tournament.location}
@@ -333,7 +345,7 @@ const HomePage = () => {
               <Heading size="xl" mb={6} color={textColor}>
                 Torneios em Destaque
               </Heading>
-              
+
               <Grid
                 templateColumns={{
                   base: '1fr',
@@ -343,7 +355,7 @@ const HomePage = () => {
                 gap={6}
                 mb={10}
               >
-                {featuredTournaments.map(tournament => 
+                {featuredTournaments.map(tournament =>
                   renderTournamentCard(tournament, true)
                 )}
               </Grid>
@@ -354,7 +366,7 @@ const HomePage = () => {
           <Heading size="xl" mb={6} color={textColor}>
             Torneios e Rankings
           </Heading>
-          
+
           <InputGroup mb={6}>
             <InputLeftElement pointerEvents="none">
               <FiSearch color="gray.300" />
@@ -366,7 +378,7 @@ const HomePage = () => {
               bg={cardBg}
             />
           </InputGroup>
-          
+
           {isLoading && filteredTournaments.length === 0 ? (
             <Grid
               templateColumns={{
@@ -398,7 +410,7 @@ const HomePage = () => {
               {filteredTournaments.map(tournament => renderTournamentCard(tournament, false))}
             </Grid>
           )}
-          
+
           {currentPage !== -1 && (
             <Flex justify="center" mt={8}>
               <Button

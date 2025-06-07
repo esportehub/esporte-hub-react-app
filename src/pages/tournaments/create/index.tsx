@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -39,6 +39,7 @@ import { useRouter } from 'next/router';
 import DateInput from '../../../components/DateInput'
 import Layout from '@/components/Layout';
 import axios from 'axios';
+import { useAuth } from '@/hooks/auth/useAuth';
 
 interface FormData {
   eventName: string;
@@ -67,6 +68,7 @@ interface FormData {
 const TournamentCreationPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
+  const { user, appUser } = useAuth();
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(undefined);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -100,6 +102,12 @@ const TournamentCreationPage: React.FC = () => {
     prizeValue: '',
     tournamentRules: ''
   });
+
+    useEffect(() => {
+        if (user) {
+          console.log('Usuário autenticado:', user.name, user.email);
+        }
+      }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
