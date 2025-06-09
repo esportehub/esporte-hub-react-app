@@ -40,35 +40,12 @@ import DateInput from '../../../components/DateInput'
 import Layout from '@/components/Layout';
 import axios from 'axios';
 import { useAuth } from '@/hooks/auth/useAuth';
-
-interface FormData {
-  eventName: string;
-  playerInfo: string;
-  registrationStart: Date | null;
-  registrationEnd: Date | null;
-  tournamentStart: Date | null;
-  tournamentEnd: Date | null;
-  eligiblePlayers: string;
-  maxCategoriesPerPlayer: string;
-  paymentMethod: string;
-  registrationFeeType: string;
-  registrationFees: string[];
-  paymentDeadline: string;
-  tournamentLocation: string;
-  teamId: string;
-  contactEmail: string;
-  contactPhone: string;
-  preRegistrationInfo: string;
-  postRegistrationInfo: string;
-  prizeDescription: string;
-  prizeValue: string;
-  tournamentRules: string;
-}
+import { CreateTournamentInterface } from '@/form-data/tournaments/CreateTournamentInterface';
 
 const TournamentCreationPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
-  const { user, appUser } = useAuth();
+  const { decodedToken, appUser } = useAuth();
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(undefined);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -79,7 +56,7 @@ const TournamentCreationPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [createdTournamentId, setCreatedTournamentId] = useState<number | null>(null);
 
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<CreateTournamentInterface>({
     eventName: '',
     playerInfo: '',
     registrationStart: null,
@@ -90,7 +67,7 @@ const TournamentCreationPage: React.FC = () => {
     maxCategoriesPerPlayer: '',
     paymentMethod: 'Pix',
     registrationFeeType: 'Fixo',
-    registrationFees: ['', '', '', ''],
+    registrationFees: [0, 0, 0, 0],
     paymentDeadline: '1 dia',
     tournamentLocation: '',
     teamId: '',
@@ -104,25 +81,27 @@ const TournamentCreationPage: React.FC = () => {
   });
 
     useEffect(() => {
-        if (user) {
-          console.log('Usuário autenticado:', user.name, user.email);
+        if (decodedToken) {
+          console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
         }
-      }, [user]);
+      }, [decodedToken]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleDateChange = (name: keyof FormData, date: Date | null) => {
+  const handleDateChange = (name: keyof CreateTournamentInterface, date: Date | null) => {
     setFormData(prev => ({ ...prev, [name]: date }));
   };
 
-  const handleFeeChange = (index: number, value: string) => {
-    const newFees = [...formData.registrationFees];
-    newFees[index] = value;
-    setFormData(prev => ({ ...prev, registrationFees: newFees }));
-  };
+const handleFeeChange = (index: number, value: string) => {
+  const updatedFees = [...formData.registrationFees];
+  // Garante que o valor seja um número (0 se for inválido)
+  updatedFees[index] = value === '' ? 0 : parseInt(value, 10) || 0;
+  setFormData({ ...formData, registrationFees: updatedFees });
+};
+
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -187,7 +166,7 @@ const TournamentCreationPage: React.FC = () => {
         paymentMethod: formData.paymentMethod,
         prizeValue: parseFloat(formData.prizeValue) || 0,
         registrationFeeType: formData.registrationFeeType,
-        registrationFees: formData.registrationFees.map(fee => parseFloat(fee) || 0),
+        registrationFees: formData.registrationFees.map(fee => Number(fee) || 0),
         paymentDeadline: formData.paymentDeadline,
         tournamentLocation: formData.tournamentLocation,
         teamId: parseInt(formData.teamId) || 0,
@@ -200,7 +179,7 @@ const TournamentCreationPage: React.FC = () => {
       };
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/beach-tennis/tournaments`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/tournaments`,
         requestBody,
         {
           headers: {
@@ -419,7 +398,7 @@ const TournamentCreationPage: React.FC = () => {
                     <InputLeftAddon>{index + 1}ª Inscrição</InputLeftAddon>
                     <Input
                       type="number"
-                      value={formData.registrationFees[index]}
+                      value={formData.registrationFees[index] ?? 0}
                       onChange={(e) => handleFeeChange(index, e.target.value)}
                     />
                     <InputRightElement pointerEvents="none" />

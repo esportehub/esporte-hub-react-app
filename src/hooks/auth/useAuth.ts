@@ -6,27 +6,27 @@ import { AppUser } from '@/models/AppUser';
 
 export const useAuth = () => {
   const router = useRouter();
-  const [user, setUser] = useState<DecodedToken | null>(null);
+  const [decodedToken, setDecodedToken] = useState<DecodedToken | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (token) {
-      const decoded = decodeToken(token);
-      if (decoded && decoded.user_id) {
-        setUser(decoded);
-        setAppUser(AppUser.fromDecodedUser(decoded));
+      const decodedToken = decodeToken(token);
+      if (decodedToken && decodedToken.user_id) {
+        setDecodedToken(decodedToken);
+        setAppUser(AppUser.fromDecodedToken(decodedToken));
       } else {
-        setUser(null);
+        setDecodedToken(null);
         router.push('/unauthorized'); // redireciona se token inválido
       }
     } else {
-      setUser(null);
+      setDecodedToken(null);
       router.push('/unauthorized'); // redireciona se não houver token
     }
     setLoading(false);
   }, []);
 
-  return { user, appUser };
+  return { decodedToken, appUser };
 };

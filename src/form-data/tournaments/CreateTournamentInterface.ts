@@ -9,7 +9,7 @@ export interface CreateTournamentInterface {
   maxCategoriesPerPlayer: string;
   paymentMethod: string;
   registrationFeeType: string;
-  registrationFees: string[];
+  registrationFees: number[];
   paymentDeadline: string;
   tournamentLocation: string;
   teamId: string;

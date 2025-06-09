@@ -63,16 +63,17 @@ interface ProfileButton {
 const ProfilePage = () => {
   const theme = useTheme();
   const router = useRouter();
-  const { user, appUser, loading } = useAuth();
+  const { decodedToken, appUser } = useAuth();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [logoutModal, setLogoutModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
     useEffect(() => {
-      if (user) {
-        console.log('Usuário autenticado:', user.name, user.email);
+      if (decodedToken) {
+        console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
       }
-    }, [user]);
+    }, [decodedToken]);
 
   const handleImageUpload = () => {
     setUploadingImage(true);
@@ -101,7 +102,7 @@ const ProfilePage = () => {
     { icon: <ChevronRightIcon boxSize={6} color="blue.500" />, label: 'Sair', action: handleLogout }
   ];
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Flex justify="center" align="center" minHeight="100vh">
         <CircularProgress isIndeterminate color="blue.500" />

@@ -1,5 +1,4 @@
 import { DecodedToken } from "@/interfaces/DecodedToken";
-import App from "next/app";
 
 export class AppUser {
     id: string;
@@ -34,7 +33,7 @@ export class AppUser {
         this.imageHash = data.imageHash ?? '';
     }
 
-    static fromDecodedUser(decoded: DecodedToken) : AppUser {
+    static fromDecodedToken(decoded: DecodedToken) : AppUser {
         return new AppUser(
             decoded
         )

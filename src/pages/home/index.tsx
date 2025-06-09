@@ -46,7 +46,7 @@ const HomePage = () => {
 
   const router = useRouter();
   const toast = useToast();
-  const { user, appUser } = useAuth();
+  const { decodedToken, appUser } = useAuth();
 
   // State for the page
   const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
@@ -57,12 +57,12 @@ const HomePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    if (user) {
-      console.log('Usuário autenticado:', user.name, user.email);
+    if (decodedToken) {
+      console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
       // aqui pode chamar outras funções de carregamento+
       console.log(appUser?.name);
     }
-  }, [user]);
+  }, [decodedToken]);
 
   // Filter tournaments when search text or tournaments change
   useEffect(() => {
