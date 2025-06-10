@@ -6,18 +6,23 @@ export interface CreateTournamentInterface {
   tournamentStart: Date | null;
   tournamentEnd: Date | null;
   eligiblePlayers: string;
-  maxCategoriesPerPlayer: string;
+  maxCategoriesPerPlayer: number;
   paymentMethod: string;
+  prizeValue: string;
   registrationFeeType: string;
-  registrationFees: number[];
+  registrationFee1: number;
+  registrationFee2: number;
+  registrationFee3: number;
+  registrationFee4: number;
   paymentDeadline: string;
   tournamentLocation: string;
   teamId: string;
   contactEmail: string;
   contactPhone: string;
+  scoreReporter: string;
+  waitlistInfo: string;
   preRegistrationInfo: string;
   postRegistrationInfo: string;
   prizeDescription: string;
-  prizeValue: string;
   tournamentRules: string;
 }

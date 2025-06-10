@@ -52,7 +52,7 @@ const TournamentCreationPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { isOpen: isSuccessOpen, onOpen: onSuccessOpen, onClose: onSuccessClose } = useDisclosure();
   const { isOpen: isErrorOpen, onOpen: onErrorOpen, onClose: onErrorClose } = useDisclosure();
-  
+
   const [errorMessage, setErrorMessage] = useState('');
   const [createdTournamentId, setCreatedTournamentId] = useState<number | null>(null);
 
@@ -63,45 +63,53 @@ const TournamentCreationPage: React.FC = () => {
     registrationEnd: null,
     tournamentStart: null,
     tournamentEnd: null,
-    eligiblePlayers: 'Todos os jogadores',
-    maxCategoriesPerPlayer: '',
+    eligiblePlayers: '',
+    maxCategoriesPerPlayer: 0,
     paymentMethod: 'Pix',
-    registrationFeeType: 'Fixo',
-    registrationFees: [0, 0, 0, 0],
-    paymentDeadline: '1 dia',
+    prizeValue: '',
+    registrationFeeType: '',
+    registrationFee1: 0,
+    registrationFee2: 0,
+    registrationFee3: 0,
+    registrationFee4: 0,
+    paymentDeadline: '',
     tournamentLocation: '',
     teamId: '',
     contactEmail: '',
     contactPhone: '',
+    scoreReporter: '',
+    waitlistInfo: '',
     preRegistrationInfo: '',
     postRegistrationInfo: '',
     prizeDescription: '',
-    prizeValue: '',
-    tournamentRules: ''
+    tournamentRules: '',
   });
 
-    useEffect(() => {
-        if (decodedToken) {
-          console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
-        }
-      }, [decodedToken]);
+  useEffect(() => {
+    if (decodedToken) {
+      console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
+    }
+  }, [decodedToken]);
 
+  // Modifique o handleChange para tratar números corretamente
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Tratamento especial para campos numéricos
+    if (name === 'maxCategoriesPerPlayer' ||
+      name === 'registrationFee1' ||
+      name === 'registrationFee2' ||
+      name === 'registrationFee3' ||
+      name === 'registrationFee4') {
+      setFormData(prev => ({ ...prev, [name]: Number(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleDateChange = (name: keyof CreateTournamentInterface, date: Date | null) => {
     setFormData(prev => ({ ...prev, [name]: date }));
   };
-
-const handleFeeChange = (index: number, value: string) => {
-  const updatedFees = [...formData.registrationFees];
-  // Garante que o valor seja um número (0 se for inválido)
-  updatedFees[index] = value === '' ? 0 : parseInt(value, 10) || 0;
-  setFormData({ ...formData, registrationFees: updatedFees });
-};
-
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -162,11 +170,14 @@ const handleFeeChange = (index: number, value: string) => {
         tournamentStart: formatDate(formData.tournamentStart),
         tournamentEnd: formatDate(formData.tournamentEnd),
         eligiblePlayers: formData.eligiblePlayers,
-        maxCategoriesPerPlayer: parseInt(formData.maxCategoriesPerPlayer) || 0,
+        maxCategoriesPerPlayer: formData.maxCategoriesPerPlayer,
         paymentMethod: formData.paymentMethod,
         prizeValue: parseFloat(formData.prizeValue) || 0,
         registrationFeeType: formData.registrationFeeType,
-        registrationFees: formData.registrationFees.map(fee => Number(fee) || 0),
+        registrationFee1: formData.registrationFee1,
+        registrationFee2: formData.registrationFee2 ? formData.registrationFee2 : 0,
+        registrationFee3: formData.registrationFee3 ? formData.registrationFee3 : 0,
+        registrationFee4: formData.registrationFee4 ? formData.registrationFee4 : 0,
         paymentDeadline: formData.paymentDeadline,
         tournamentLocation: formData.tournamentLocation,
         teamId: parseInt(formData.teamId) || 0,
@@ -175,7 +186,9 @@ const handleFeeChange = (index: number, value: string) => {
         preRegistrationInfo: formData.preRegistrationInfo,
         postRegistrationInfo: formData.postRegistrationInfo,
         prizeDescription: formData.prizeDescription,
-        tournamentRules: formData.tournamentRules
+        tournamentRules: formData.tournamentRules,
+        scoreReporter: formData.scoreReporter,
+        waitlistInfo: formData.waitlistInfo
       };
 
       const response = await axios.post(
@@ -388,24 +401,26 @@ const handleFeeChange = (index: number, value: string) => {
           </FormControl>
 
           {formData.registrationFeeType === 'Variável' && (
-            <Box mt={4}>
-              <Text fontSize="lg" mb={4}>
-                Valores de Inscrição
-              </Text>
-              <Stack spacing={4}>
-                {[0, 1, 2, 3].map((index) => (
-                  <InputGroup key={index}>
-                    <InputLeftAddon>{index + 1}ª Inscrição</InputLeftAddon>
+            <>
+              {[1, 2, 3, 4].map((feeNumber) => (
+                <FormControl mb={4} key={feeNumber}>
+                  <FormLabel>{feeNumber}ª Inscrição</FormLabel>
+                  <InputGroup>
                     <Input
                       type="number"
-                      value={formData.registrationFees[index] ?? 0}
-                      onChange={(e) => handleFeeChange(index, e.target.value)}
+                      value={(formData as any)[`registrationFee${feeNumber}`] || ''}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          [`registrationFee${feeNumber}`]: Number(e.target.value),
+                        }))
+                      }
                     />
                     <InputRightElement pointerEvents="none" />
                   </InputGroup>
-                ))}
-              </Stack>
-            </Box>
+                </FormControl>
+              ))}
+            </>
           )}
 
           {formData.registrationFeeType === 'Fixo' && (
@@ -414,13 +429,19 @@ const handleFeeChange = (index: number, value: string) => {
               <InputGroup>
                 <Input
                   type="number"
-                  value={formData.registrationFees[0]}
-                  onChange={(e) => handleFeeChange(0, e.target.value)}
+                  value={formData.registrationFee1 || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      registrationFee1: Number(e.target.value),
+                    }))
+                  }
                 />
                 <InputRightElement pointerEvents="none" />
               </InputGroup>
             </FormControl>
           )}
+
 
           <FormControl mb={4}>
             <FormLabel>Prazo máximo para pagamento de inscrição</FormLabel>
