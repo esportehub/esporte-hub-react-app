@@ -43,25 +43,21 @@ import {
 import { IoFilterOutline } from 'react-icons/io5';
 import axios from 'axios';
 import Layout from '@/components/Layout';
+import { useAuth } from '@/hooks/auth/useAuth';
 
 interface Tournament {
   id: string;
   eventName: string;
-  status: 'ativo' | 'cancelado' | 'concluido';
+  status: string;
   registrationStart: string;
   registrationEnd: string;
-  ownerId?: string;
-}
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
+  createdBy: string;
 }
 
 const AllTournamentsPage = () => {
   const router = useRouter();
   const toast = useToast();
+  const { decodedToken, appUser } = useAuth();
   const [tabValue, setTabValue] = useState(0);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [myTournaments, setMyTournaments] = useState<Tournament[]>([]);
@@ -83,79 +79,62 @@ const AllTournamentsPage = () => {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  
-  // User data
-  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch user data
-        const userResponse = await axios.get('/me', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
-        setUser(userResponse.data);
-        
-        // Check user role
-        const roleResponse = await axios.get('/user_role', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
-        setIsAdmin(roleResponse.data.roles.includes('admin'));
-        
-        // Fetch all tournaments
-        const tournamentsResponse = await axios.get('/beach-tennis/tournaments', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
-        setTournaments(tournamentsResponse.data);
-        
-        // Fetch user's tournaments
-        if (userResponse.data?.id) {
-          const myTournamentsResponse = await axios.get(
-            `/beach-tennis/tournament-registrations/tournaments/${userResponse.data.id}`,
-            {
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-              }
-            }
-          );
-          
-          // Fetch details for each tournament
-          const tournamentDetails = await Promise.all(
-            myTournamentsResponse.data.map((reg: any) => 
-              axios.get(`/beach-tennis/tournaments/${reg.tournament_id}`, {
-                headers: {
-                  'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-              })
-          ));
-          
-          setMyTournaments(tournamentDetails.map(res => res.data));
-          
-          // Set created tournaments
-          const created = tournamentsResponse.data.filter(
-            (t: Tournament) => t.ownerId === userResponse.data.id
-          );
-          setCreatedTournaments(created);
+    if (decodedToken) {
+      console.log('Usuário autenticado:', decodedToken);
+      fetchTournaments();
+      //setIsAdmin(decodedToken.role === 'admin');
+    }
+  }, [decodedToken]);
+
+  const fetchTournaments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tournaments`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
         }
-        
-        setLoading(false);
-      } catch (err: any) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-  }, []);
+      });
+      
+      console.log('Dados recebidos:', response.data);
+      
+      const allTournaments = response.data.map((tournament: any) => ({
+        id: tournament.id,
+        eventName: tournament.eventName,
+        status: tournament.status?.toLowerCase() || 'ativo',
+        registrationStart: tournament.registrationStart,
+        registrationEnd: tournament.registrationEnd,
+        createdBy: tournament.createdBy
+      }));
+      
+      setTournaments(allTournaments);
+      setMyTournaments(allTournaments); // Temporário - mostrar todos para testes
+      
+      const userCreatedTournaments = allTournaments.filter((t: Tournament) => 
+        t.createdBy === decodedToken?.user_id
+      );
+      setCreatedTournaments(userCreatedTournaments);
+      
+    } catch (err) {
+      console.error('Erro ao buscar torneios:', err);
+      setError('Erro ao carregar torneios. Tente novamente mais tarde.');
+      toast({
+        title: 'Erro',
+        description: 'Falha ao carregar torneios',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'ativo': return 'green';
       case 'cancelado': return 'red';
       case 'concluido': return 'yellow';
@@ -164,22 +143,28 @@ const AllTournamentsPage = () => {
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'ativo': return 'Ativo';
       case 'cancelado': return 'Cancelado';
       case 'concluido': return 'Concluído';
-      default: return 'Desconhecido';
+      default: return status; // Retorna o valor original se não for um dos esperados
     }
   };
 
   const filterTournaments = (tournamentsList: Tournament[]) => {
+    if (!tournamentsList) return [];
+    
     return tournamentsList.filter(tournament => {
       const matchesSearchQuery = tournament.eventName.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      if (!isFilterApplied) {
+        return matchesSearchQuery;
+      }
+      
       const matchesStatusFilter = 
-        (filterValues.ativos && tournament.status === 'ativo') ||
-        (filterValues.concluidos && tournament.status === 'concluido') ||
-        (filterValues.cancelados && tournament.status === 'cancelado') ||
-        (!isFilterApplied && tournament.status === 'ativo'); // Default to active if no filter
+        (filterValues.ativos && tournament.status.toLowerCase() === 'ativo') ||
+        (filterValues.concluidos && tournament.status.toLowerCase() === 'concluido') ||
+        (filterValues.cancelados && tournament.status.toLowerCase() === 'cancelado');
       
       return matchesSearchQuery && matchesStatusFilter;
     });
@@ -248,32 +233,39 @@ const AllTournamentsPage = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
   const renderTabContent = () => {
-    if (loading) return <CircularProgress isIndeterminate mt={8} />;
-    if (error) return <Alert status="error">{error}</Alert>;
+    if (loading) return (
+      <Flex justify="center" mt={8}>
+        <CircularProgress isIndeterminate />
+      </Flex>
+    );
+    
+    if (error) return (
+      <Alert status="error" mt={4}>
+        {error}
+      </Alert>
+    );
     
     let filteredTournaments: Tournament[] = [];
-    let totalItems = 0;
     
     switch (tabValue) {
-      case 0: // Todos
+      case 0:
         filteredTournaments = filterTournaments(tournaments);
         break;
-      case 1: // Meus torneios
+      case 1:
         filteredTournaments = filterTournaments(myTournaments);
         break;
-      case 2: // Torneios criados
+      case 2:
         filteredTournaments = filterTournaments(createdTournaments);
         break;
       default:
         filteredTournaments = [];
     }
     
-    totalItems = filteredTournaments.length;
-    const pageCount = Math.ceil(totalItems / itemsPerPage);
+    const pageCount = Math.ceil(filteredTournaments.length / itemsPerPage);
     const paginatedTournaments = filteredTournaments.slice(
       (currentPage - 1) * itemsPerPage,
       currentPage * itemsPerPage
@@ -305,25 +297,26 @@ const AllTournamentsPage = () => {
         </Flex>
         
         {paginatedTournaments.length === 0 ? (
-          <Text color="red.500" textAlign="center" mt={4}>
-            Nenhum torneio encontrado com esses filtros
+          <Text color="gray.500" textAlign="center" mt={4}>
+            Nenhum torneio encontrado
           </Text>
         ) : (
           <>
             {paginatedTournaments.map(renderTournamentCard)}
-            <Flex justify="center" mt={6}>
-              {/* Chakra UI doesn't have a built-in Pagination component, so we'll use buttons */}
-              {Array.from({ length: pageCount }).map((_, index) => (
-                <Button
-                  key={index}
-                  mx={1}
-                  colorScheme={currentPage === index + 1 ? 'blue' : 'gray'}
-                  onClick={() => setCurrentPage(index + 1)}
-                >
-                  {index + 1}
-                </Button>
-              ))}
-            </Flex>
+            {pageCount > 1 && (
+              <Flex justify="center" mt={6}>
+                {Array.from({ length: pageCount }).map((_, index) => (
+                  <Button
+                    key={index}
+                    mx={1}
+                    colorScheme={currentPage === index + 1 ? 'blue' : 'gray'}
+                    onClick={() => setCurrentPage(index + 1)}
+                  >
+                    {index + 1}
+                  </Button>
+                ))}
+              </Flex>
+            )}
           </>
         )}
       </Box>
@@ -332,95 +325,95 @@ const AllTournamentsPage = () => {
 
   return (
     <Layout>
-    <Box flex="1">
-      <Flex as="header" bg="white" boxShadow="sm" position="sticky" top="0" zIndex="sticky">
-        <Flex align="center" p={4} w="full" maxW="container.xl" mx="auto">
-          <IconButton
-            aria-label="Voltar"
-            icon={<ChevronLeftIcon />}
-            onClick={() => router.back}
-            mr={4}
-          />
-          <Heading size="lg" flex="1">
-            Torneios
-          </Heading>
-          {isAdmin && (
+      <Box flex="1">
+        <Flex as="header" bg="white" boxShadow="sm" position="sticky" top="0" zIndex="sticky">
+          <Flex align="center" p={4} w="full" maxW="container.xl" mx="auto">
             <IconButton
-              aria-label="Criar torneio"
-              icon={<AddIcon />}
-              colorScheme="blue"
-              onClick={() => router.push('/tournament/create')}
+              aria-label="Voltar"
+              icon={<ChevronLeftIcon />}
+              onClick={() => router.back()}
+              mr={4}
             />
-          )}
+            <Heading size="lg" flex="1">
+              Torneios
+            </Heading>
+            {isAdmin && (
+              <IconButton
+                aria-label="Criar torneio"
+                icon={<AddIcon />}
+                colorScheme="blue"
+                onClick={() => router.push('/tournament/create')}
+              />
+            )}
+          </Flex>
         </Flex>
-      </Flex>
 
-      <Tabs 
-        index={tabValue}
-        onChange={(index) => {
-          setTabValue(index);
-          setCurrentPage(1);
-        }}
-        isFitted
-        variant="enclosed"
-      >
-        <TabList>
-          <Tab>Todos</Tab>
-          <Tab>Meus torneios</Tab>
-          <Tab>Torneios criados</Tab>
-        </TabList>
+        <Tabs 
+          index={tabValue}
+          onChange={(index) => {
+            setTabValue(index);
+            setCurrentPage(1);
+          }}
+          isFitted
+          variant="enclosed"
+        >
+          <TabList>
+            <Tab>Todos</Tab>
+            <Tab>Meus torneios</Tab>
+            <Tab>Torneios criados</Tab>
+          </TabList>
 
-        <TabPanels>
-          <TabPanel p={0}>{renderTabContent()}</TabPanel>
-          <TabPanel p={0}>{renderTabContent()}</TabPanel>
-          <TabPanel p={0}>{renderTabContent()}</TabPanel>
-        </TabPanels>
-      </Tabs>
-      
-      <Modal isOpen={filterOpen} onClose={() => setFilterOpen(false)}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Filtrar torneios</ModalHeader>
-          <ModalBody>
-            <Stack spacing={4}>
-              <Checkbox
-                isChecked={filterValues.ativos}
-                onChange={(e) => setFilterValues({
-                  ...filterValues,
-                  ativos: e.target.checked
-                })}
-              >
-                Ativos
-              </Checkbox>
-              <Checkbox
-                isChecked={filterValues.concluidos}
-                onChange={(e) => setFilterValues({
-                  ...filterValues,
-                  concluidos: e.target.checked
-                })}
-              >
-                Concluídos
-              </Checkbox>
-              <Checkbox
-                isChecked={filterValues.cancelados}
-                onChange={(e) => setFilterValues({
-                  ...filterValues,
-                  cancelados: e.target.checked
-                })}
-              >
-                Cancelados
-              </Checkbox>
-            </Stack>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="ghost" onClick={handleFilterReset}>Limpar</Button>
-            <Button colorScheme="blue" ml={3} onClick={handleFilterApply}>
-              Aplicar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Box>
+          <TabPanels>
+            <TabPanel p={0}>{renderTabContent()}</TabPanel>
+            <TabPanel p={0}>{renderTabContent()}</TabPanel>
+            <TabPanel p={0}>{renderTabContent()}</TabPanel>
+          </TabPanels>
+        </Tabs>
+        
+        <Modal isOpen={filterOpen} onClose={() => setFilterOpen(false)}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Filtrar torneios</ModalHeader>
+            <ModalBody>
+              <Stack spacing={4}>
+                <Checkbox
+                  isChecked={filterValues.ativos}
+                  onChange={(e) => setFilterValues({
+                    ...filterValues,
+                    ativos: e.target.checked
+                  })}
+                >
+                  Ativos
+                </Checkbox>
+                <Checkbox
+                  isChecked={filterValues.concluidos}
+                  onChange={(e) => setFilterValues({
+                    ...filterValues,
+                    concluidos: e.target.checked
+                  })}
+                >
+                  Concluídos
+                </Checkbox>
+                <Checkbox
+                  isChecked={filterValues.cancelados}
+                  onChange={(e) => setFilterValues({
+                    ...filterValues,
+                    cancelados: e.target.checked
+                  })}
+                >
+                  Cancelados
+                </Checkbox>
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" onClick={handleFilterReset}>Limpar</Button>
+              <Button colorScheme="blue" ml={3} onClick={handleFilterApply}>
+                Aplicar
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Box>
     </Layout>
   );
 };
