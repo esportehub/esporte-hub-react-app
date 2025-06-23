@@ -10,7 +10,7 @@ export class AppUser {
     gender?: string;
     phone?: string;
     about?: string;
-    birthday?: Date;
+    birthday?: Date | null;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;

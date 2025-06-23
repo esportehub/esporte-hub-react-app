@@ -19,8 +19,17 @@ import {
   ModalContent,
   ModalBody,
   ModalFooter,
+  ModalHeader,
   Stack,
-  Heading
+  Heading,
+  useDisclosure,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
+  Tag,
+  TagLabel,
+  useToast
 } from '@chakra-ui/react';
 import {
   ArrowBackIcon,
@@ -32,21 +41,11 @@ import { useRouter } from 'next/router';
 import { FaCamera } from 'react-icons/fa';
 import { IoPersonSharp, IoTennisballOutline } from 'react-icons/io5';
 import { useAuth } from '@/hooks/auth/useAuth';
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  about: string;
-  imageUrl: string;
-  stats: {
-    tournamentsPlayed: number;
-    rankingsPlayed: number;
-    activeTournaments: number;
-    winStreak: number;
-  };
-}
+import { format, parse } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import axios from 'axios';
 
 interface InfoCard {
   icon: React.ReactNode;
@@ -60,20 +59,57 @@ interface ProfileButton {
   action: () => void;
 }
 
+interface UserFormData {
+  name: string;
+  middleName: string;
+  document: string;
+  email: string;
+  phone: string;
+  birthday: Date | null;
+  about: string;
+  gender: string;
+}
+
 const ProfilePage = () => {
   const theme = useTheme();
   const router = useRouter();
+  const toast = useToast();
   const { decodedToken, appUser } = useAuth();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [logoutModal, setLogoutModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [formData, setFormData] = useState<UserFormData>({
+    name: '',
+    middleName: '',
+    document: '',
+    email: '',
+    phone: '',
+    birthday: null,
+    about: '',
+    gender: ''
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const genderOptions = ['Feminino', 'Masculino'];
 
-    useEffect(() => {
-      if (decodedToken) {
-        console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
+  useEffect(() => {
+    if (decodedToken) {
+      console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
+      if (appUser) {
+        setFormData({
+          name: appUser.name || '',
+          middleName: appUser.middleName || '',
+          document: appUser.document || '',
+          email: appUser.email || '',
+          phone: appUser.phone || '',
+          birthday: new Date(),
+          about: appUser.about || '',
+          gender: appUser.gender || ''
+        });
       }
-    }, [decodedToken]);
+    }
+  }, [decodedToken, appUser]);
 
   const handleImageUpload = () => {
     setUploadingImage(true);
@@ -90,6 +126,81 @@ const ProfilePage = () => {
     }, 2000);
   };
 
+  const handlePersonalDataClick = () => {
+    onOpen();
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleDateChange = (date: Date | null) => {
+    setFormData(prev => ({
+      ...prev,
+      birthday: date
+    }));
+  };
+
+  const handleGenderChange = (gender: string) => {
+    setFormData(prev => ({
+      ...prev,
+      gender
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsEditing(false);
+    setIsLoading(true);
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      //const formattedDate = formData.birthday ? format(formData.birthday, 'yyyy-MM-dd') : null;
+
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${decodedToken?.user_id}`,
+        {
+          gender: formData.gender,
+          phone: formData.phone,
+          email: formData.email,
+          about: formData.about,
+          document: formData.document,
+          //birthday: formattedDate
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        toast({
+          title: 'Informações atualizadas com sucesso!',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error updating user data:', error);
+      toast({
+        title: 'Erro ao atualizar dados do usuário',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const infoCards: InfoCard[] = [
     { icon: <IoTennisballOutline />, title: 'Torneios jogados no ano', value: '1'},
     { icon: <StarIcon boxSize={6} />, title: 'Rankings jogados no ano', value: '0' },
@@ -98,7 +209,7 @@ const ProfilePage = () => {
   ];
 
   const profileButtons: ProfileButton[] = [
-    { icon: <IoPersonSharp color="blue.500" />, label: 'Dados Pessoais', action: () => router.push('/me/profile/personal-data') },
+    { icon: <IoPersonSharp color="blue.500" />, label: 'Dados Pessoais', action: handlePersonalDataClick },
     { icon: <ChevronRightIcon boxSize={6} color="blue.500" />, label: 'Sair', action: handleLogout }
   ];
 
@@ -243,6 +354,174 @@ const ProfilePage = () => {
               Cancelar
             </Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Personal Data Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            <Flex align="center">
+              <IconButton
+                icon={<ArrowBackIcon />}
+                aria-label="Voltar"
+                onClick={onClose}
+                variant="ghost"
+                mr={2}
+              />
+              <Heading size="md">Meus dados pessoais</Heading>
+            </Flex>
+          </ModalHeader>
+          <ModalBody>
+            <Card>
+              <CardBody>
+                <form onSubmit={handleSubmit}>
+                  <Stack spacing={4}>
+                    <FormControl>
+                      <FormLabel fontWeight="bold">Nome</FormLabel>
+                      <Input
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        isReadOnly={!isEditing}
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="bold">Sobrenome</FormLabel>
+                      <Input
+                        name="middleName"
+                        value={formData.middleName}
+                        onChange={handleChange}
+                        isReadOnly={!isEditing}
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="bold">Email</FormLabel>
+                      <Input
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        type="email"
+                        isReadOnly={!isEditing}
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="bold">Documento CPF</FormLabel>
+                      <Input
+                        name="document"
+                        value={formData.document}
+                        onChange={handleChange}
+                        isReadOnly={!isEditing}
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="bold">Telefone WhatsApp</FormLabel>
+                      <Input
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        type="tel"
+                        isReadOnly={!isEditing}
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="bold">Data de Nascimento</FormLabel>
+                      <Box
+                        borderRadius="md"
+                        borderWidth="1px"
+                        borderColor="gray.200"
+                        p={1}
+                      >
+                        <DatePicker
+                          selected={formData.birthday}
+                          onChange={handleDateChange}
+                          disabled={!isEditing}
+                          dateFormat="dd/MM/yyyy"
+                          locale={ptBR}                
+                          customInput={
+                            <Input
+                              isReadOnly={!isEditing}
+                              hidden={true}
+                              value={formData.birthday ? format(formData.birthday, 'dd/MM/yyyy') : ''}
+                            />
+                          }
+                        />
+                      </Box>
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="bold">Sobre você, {formData.name}</FormLabel>
+                      <Textarea
+                        name="about"
+                        value={formData.about}
+                        onChange={handleChange}
+                        placeholder="Esportes que pratica, seus pontos fortes, disponibilidade, etc."
+                        rows={5}
+                        isReadOnly={!isEditing}
+                      />
+                    </FormControl>
+
+                    <FormControl>
+                      <FormLabel fontWeight="bold">Gênero</FormLabel>
+                      {formData.gender && !isEditing ? (
+                        <Tag size="lg" colorScheme="blue" borderRadius="full">
+                          <TagLabel>{formData.gender}</TagLabel>
+                        </Tag>
+                      ) : (
+                        <Stack direction="row" spacing={2}>
+                          {genderOptions.map((option) => (
+                            <Tag
+                              key={option}
+                              size="lg"
+                              cursor={isEditing ? "pointer" : "default"}
+                              onClick={isEditing ? () => handleGenderChange(option) : undefined}
+                              colorScheme={formData.gender === option ? 'blue' : 'gray'}
+                              variant={formData.gender === option ? 'solid' : 'outline'}
+                            >
+                              <TagLabel>{option}</TagLabel>
+                            </Tag>
+                          ))}
+                        </Stack>
+                      )}
+                    </FormControl>
+
+                    <Flex justify="flex-end" gap={4} mt={6}>
+                      {!isEditing ? (
+                        <Button
+                          colorScheme="blue"
+                          onClick={() => setIsEditing(true)}
+                        >
+                          Editar Dados
+                        </Button>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsEditing(false)}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            type="submit"
+                            colorScheme="blue"
+                            isLoading={isLoading}
+                          >
+                            Salvar Alterações
+                          </Button>
+                        </>
+                      )}
+                    </Flex>
+                  </Stack>
+                </form>
+              </CardBody>
+            </Card>
+          </ModalBody>
         </ModalContent>
       </Modal>
     </Box>

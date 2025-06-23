@@ -19,8 +19,6 @@ import { FiHelpCircle, FiSearch, FiCheckCircle, FiX, FiCheck } from 'react-icons
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import { InputLeftElement } from '@chakra-ui/react';
-import { ca } from 'date-fns/locale';
-import { decodeToken } from '@/interfaces/DecodedToken';
 import { useAuth } from '@/hooks/auth/useAuth';
 interface Tournament {
   id: number;
@@ -58,9 +56,10 @@ const HomePage = () => {
 
   useEffect(() => {
     if (decodedToken) {
-      console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
+      console.log('Usuário autenticado:', decodedToken.name, decodedToken.email, decodedToken.user_id);
       // aqui pode chamar outras funções de carregamento+
       console.log(appUser?.name);
+      console.log(appUser);
     }
   }, [decodedToken]);
 
