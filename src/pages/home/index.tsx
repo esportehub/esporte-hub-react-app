@@ -13,6 +13,8 @@ import {
   useToast,
   Icon,
   Image,
+  Spinner,
+  Center,
   Flex,
 } from '@chakra-ui/react';
 import { FiHelpCircle, FiSearch, FiCheckCircle, FiX, FiCheck } from 'react-icons/fi';
@@ -44,7 +46,7 @@ const HomePage = () => {
 
   const router = useRouter();
   const toast = useToast();
-  const { decodedToken, appUser } = useAuth();
+  const { decodedToken, appUser, loadingAuth, errorAuth } = useAuth();
 
   // State for the page
   const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
@@ -55,13 +57,12 @@ const HomePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    if (decodedToken) {
-      console.log('Usuário autenticado:', decodedToken.name, decodedToken.email, decodedToken.user_id);
-      // aqui pode chamar outras funções de carregamento+
-      console.log(appUser?.name);
-      console.log(appUser);
+    if (!loadingAuth) {
+      console.log('Auth loading complete');
+      console.log('DecodedToken:', decodedToken);
+      console.log('AppUser:', appUser);
     }
-  }, [decodedToken]);
+  }, [loadingAuth, decodedToken, appUser]);
 
   // Filter tournaments when search text or tournaments change
   useEffect(() => {

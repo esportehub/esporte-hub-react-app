@@ -74,7 +74,7 @@ const ProfilePage = () => {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
-  const { decodedToken, appUser } = useAuth();
+  const { decodedToken, appUser, loadingAuth, errorAuth } = useAuth();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [logoutModal, setLogoutModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -160,7 +160,6 @@ const ProfilePage = () => {
     try {
       const token = localStorage.getItem('accessToken');
       //const formattedDate = formData.birthday ? format(formData.birthday, 'yyyy-MM-dd') : null;
-
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${decodedToken?.user_id}`,
         {

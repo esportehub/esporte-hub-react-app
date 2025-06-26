@@ -45,7 +45,7 @@ import { CreateTournamentInterface } from '@/form-data/tournaments/CreateTournam
 const TournamentCreationPage: React.FC = () => {
   const router = useRouter();
   const toast = useToast();
-  const { decodedToken, appUser } = useAuth();
+  const { decodedToken, appUser, loadingAuth, errorAuth } = useAuth();
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(undefined);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
