@@ -21,7 +21,7 @@ import { FiHelpCircle, FiSearch, FiCheckCircle, FiX, FiCheck } from 'react-icons
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import { InputLeftElement } from '@chakra-ui/react';
-import { useAuth } from '@/hooks/auth/useAuth';
+import { NextPageWithAuth } from 'next';
 interface Tournament {
   id: number;
   name: string;
@@ -39,14 +39,12 @@ interface StatusProps {
   text: string;
 }
 
-const HomePage = () => {
+const HomePage: NextPageWithAuth = () => {
   const bgColor = 'gray.50';
   const cardBg = 'white';
   const textColor = 'gray.700';
-
   const router = useRouter();
   const toast = useToast();
-  const { decodedToken, appUser, loadingAuth, errorAuth } = useAuth();
 
   // State for the page
   const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
@@ -56,13 +54,8 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    if (!loadingAuth) {
-      console.log('Auth loading complete');
-      console.log('DecodedToken:', decodedToken);
-      console.log('AppUser:', appUser);
-    }
-  }, [loadingAuth, decodedToken, appUser]);
+
+
 
   // Filter tournaments when search text or tournaments change
   useEffect(() => {
@@ -429,4 +422,5 @@ const HomePage = () => {
   );
 };
 
+HomePage.authRequired = true;
 export default HomePage;

@@ -1,6 +1,8 @@
 // interfaces/AppUser.ts
 import { DecodedToken } from "@/interfaces/DecodedToken";
 import axios from 'axios';
+const userCache = new Map<string, AppUser>();
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutos em ms
 
 export class AppUser {
     uid: string;
@@ -54,13 +56,24 @@ export class AppUser {
     }
 
     static async fromAPI(userId: string): Promise<AppUser> {
+        // Verificar cache primeiro
+        if (userCache.has(userId)) {
+            console.log("Usuario já em cache, requisicao não necessária")
+            return userCache.get(userId)!;
+        }
+
         try {
             const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/${userId}`);
             if (response.status != 200) {
-               throw new Error('Failed to fetch user data');
-            } 
+                throw new Error('Failed to fetch user data');
+            }
+
             const userData = await response.data;
-            return new AppUser(userData);
+            const user = new AppUser(userData);
+
+            // Armazenar em cache
+            userCache.set(userId, user);
+            return user;
         } catch (error) {
             console.error('Error fetching user data:', error);
             throw error;

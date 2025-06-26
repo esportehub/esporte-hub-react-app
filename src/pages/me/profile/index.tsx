@@ -40,12 +40,13 @@ import {
 import { useRouter } from 'next/router';
 import { FaCamera } from 'react-icons/fa';
 import { IoPersonSharp, IoTennisballOutline } from 'react-icons/io5';
-import { useAuth } from '@/hooks/auth/useAuth';
+import { useAuth } from '@/hooks/auth/authContext';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
+import { NextPageWithAuth } from 'next';
 
 interface InfoCard {
   icon: React.ReactNode;
@@ -70,11 +71,11 @@ interface UserFormData {
   gender: string;
 }
 
-const ProfilePage = () => {
+const ProfilePage: NextPageWithAuth = () => {
   const theme = useTheme();
   const router = useRouter();
   const toast = useToast();
-  const { decodedToken, appUser, loadingAuth, errorAuth } = useAuth();
+  const { decodedToken, appUser } = useAuth();
   const [userImage, setUserImage] = useState<string | null>(null);
   const [logoutModal, setLogoutModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,24 +93,6 @@ const ProfilePage = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const genderOptions = ['Feminino', 'Masculino'];
-
-  useEffect(() => {
-    if (decodedToken) {
-      console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
-      if (appUser) {
-        setFormData({
-          name: appUser.name || '',
-          middleName: appUser.middleName || '',
-          document: appUser.document || '',
-          email: appUser.email || '',
-          phone: appUser.phone || '',
-          birthday: new Date(),
-          about: appUser.about || '',
-          gender: appUser.gender || ''
-        });
-      }
-    }
-  }, [decodedToken, appUser]);
 
   const handleImageUpload = () => {
     setUploadingImage(true);
@@ -527,4 +510,5 @@ const ProfilePage = () => {
   );
 };
 
+ProfilePage.authRequired = true;
 export default ProfilePage;

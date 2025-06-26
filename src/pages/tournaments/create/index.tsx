@@ -39,13 +39,14 @@ import { useRouter } from 'next/router';
 import DateInput from '../../../components/DateInput'
 import Layout from '@/components/Layout';
 import axios from 'axios';
-import { useAuth } from '@/hooks/auth/useAuth';
+import { useAuth } from '@/hooks/auth/authContext';
 import { CreateTournamentInterface } from '@/form-data/tournaments/CreateTournamentInterface';
+import { NextPageWithAuth } from 'next';
 
-const TournamentCreationPage: React.FC = () => {
+const TournamentCreationPage: NextPageWithAuth = () => {
   const router = useRouter();
   const toast = useToast();
-  const { decodedToken, appUser, loadingAuth, errorAuth } = useAuth();
+  const { decodedToken, appUser } = useAuth();
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | undefined>(undefined);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -84,12 +85,6 @@ const TournamentCreationPage: React.FC = () => {
     prizeDescription: '',
     tournamentRules: '',
   });
-
-  useEffect(() => {
-    if (decodedToken) {
-      console.log('Usuário autenticado:', decodedToken.name, decodedToken.email);
-    }
-  }, [decodedToken]);
 
   // Modifique o handleChange para tratar números corretamente
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -628,4 +623,5 @@ const TournamentCreationPage: React.FC = () => {
   );
 };
 
+TournamentCreationPage.authRequired = true;
 export default TournamentCreationPage;

@@ -43,7 +43,8 @@ import {
 import { IoFilterOutline } from 'react-icons/io5';
 import axios from 'axios';
 import Layout from '@/components/Layout';
-import { useAuth } from '@/hooks/auth/useAuth';
+import { useAuth } from '@/hooks/auth/authContext';
+import { NextPageWithAuth } from 'next';
 
 interface Tournament {
   id: string;
@@ -54,10 +55,10 @@ interface Tournament {
   createdBy: string;
 }
 
-const AllTournamentsPage = () => {
+const TournamentsPage: NextPageWithAuth = () => {
+  const { appUser, decodedToken } = useAuth();
   const router = useRouter();
   const toast = useToast();
-  const { decodedToken, appUser } = useAuth();
   const [tabValue, setTabValue] = useState(0);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [myTournaments, setMyTournaments] = useState<Tournament[]>([]);
@@ -80,9 +81,8 @@ const AllTournamentsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  useEffect(() => {
+   useEffect(() => {
     if (decodedToken) {
-      console.log('Usuário autenticado:', decodedToken);
       fetchTournaments();
       //setIsAdmin(decodedToken.role === 'admin');
     }
@@ -114,7 +114,7 @@ const AllTournamentsPage = () => {
       setMyTournaments(allTournaments); // Temporário - mostrar todos para testes
       
       const userCreatedTournaments = allTournaments.filter((t: Tournament) => 
-        t.createdBy === decodedToken?.user_id
+        t.createdBy === appUser?.uid
       );
       setCreatedTournaments(userCreatedTournaments);
       
@@ -418,4 +418,5 @@ const AllTournamentsPage = () => {
   );
 };
 
-export default AllTournamentsPage;
+TournamentsPage.authRequired = true;
+export default TournamentsPage;

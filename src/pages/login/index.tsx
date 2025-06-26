@@ -12,8 +12,9 @@ import logo from "../../../src/assets/esporte-hub-logo.png";
 
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { initFirebase } from '@/firebase/firebase'; // ajuste o caminho se estiver diferente
+import { NextPageWithAuth } from 'next';
 
-const LoginPage = () => {
+const LoginPage: NextPageWithAuth =  () => {
   const router = useRouter();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -161,4 +162,5 @@ const LoginPage = () => {
   );
 };
 
+LoginPage.authRequired = false;
 export default LoginPage;
