@@ -2,7 +2,7 @@
 //@typescript-eslint/no-explicit-any
 //@typescript-eslint/no-unused-vars
 //@typescript-eslint/no-unused-expressions
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import {
   Box,
@@ -81,57 +81,57 @@ const TournamentsPage: NextPageWithAuth = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-   useEffect(() => {
-    if (decodedToken) {
-      fetchTournaments();
-      //setIsAdmin(decodedToken.role === 'admin');
-    }
-  }, [decodedToken]);
+  const fetchTournaments = useCallback(async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tournaments`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
+    
+    console.log('Dados recebidos:', response.data);
+    
+    const allTournaments = response.data.map((tournament: any) => ({
+      id: tournament.id,
+      eventName: tournament.eventName,
+      status: tournament.status?.toLowerCase() || 'ativo',
+      registrationStart: tournament.registrationStart,
+      registrationEnd: tournament.registrationEnd,
+      createdBy: tournament.createdBy
+    }));
+    
+    setTournaments(allTournaments);
+    setMyTournaments(allTournaments);
+    
+    const userCreatedTournaments = allTournaments.filter((t: Tournament) => 
+      t.createdBy === appUser?.uid
+    );
+    setCreatedTournaments(userCreatedTournaments);
+    
+  } catch (err) {
+    console.error('Erro ao buscar torneios:', err);
+    setError('Erro ao carregar torneios. Tente novamente mais tarde.');
+    toast({
+      title: 'Erro',
+      description: 'Falha ao carregar torneios',
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+    });
+  } finally {
+    setLoading(false);
+  }
+}, [appUser?.uid, toast]);
 
-  const fetchTournaments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tournaments`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-      
-      console.log('Dados recebidos:', response.data);
-      
-      const allTournaments = response.data.map((tournament: any) => ({
-        id: tournament.id,
-        eventName: tournament.eventName,
-        status: tournament.status?.toLowerCase() || 'ativo',
-        registrationStart: tournament.registrationStart,
-        registrationEnd: tournament.registrationEnd,
-        createdBy: tournament.createdBy
-      }));
-      
-      setTournaments(allTournaments);
-      setMyTournaments(allTournaments); // Temporário - mostrar todos para testes
-      
-      const userCreatedTournaments = allTournaments.filter((t: Tournament) => 
-        t.createdBy === appUser?.uid
-      );
-      setCreatedTournaments(userCreatedTournaments);
-      
-    } catch (err) {
-      console.error('Erro ao buscar torneios:', err);
-      setError('Erro ao carregar torneios. Tente novamente mais tarde.');
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar torneios',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+useEffect(() => {
+  if (decodedToken) {
+    fetchTournaments();
+  }
+}, [decodedToken, fetchTournaments]);
+
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

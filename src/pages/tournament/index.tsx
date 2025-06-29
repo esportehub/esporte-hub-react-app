@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 import 'react-toastify/dist/ReactToastify.css';
@@ -74,113 +74,45 @@ const TournamentView: React.FC = () => {
   const cardBg = useColorModeValue('white', 'gray.700');
   const headerBg = useColorModeValue('gray.100', 'gray.800');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await fetchUser();
-        await fetchTournaments();
-        await checkUserRole();
-      } catch (error) {
-        toast.error('Error loading data: ' + (error instanceof Error ? error.message : 'Unknown error'));
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTournaments = useCallback(async () => {
+  try {
+    const mockTournaments: Tournament[] = [
+      {
+        id: '1',
+        eventName: 'Tournament 1',
+        status: 'ativo',
+        registrationStart: new Date().toISOString(),
+        registrationEnd: new Date().toISOString(),
+        ownerId: '1'
+      },
+      // ... outros torneios mockados
+    ];
+    setTournaments(mockTournaments);
+    setTotalPages(Math.ceil(mockTournaments.length / 5));
 
-    fetchData();
-  }, []);
-
-  useEffect(() => {
     if (user) {
-      fetchTournamentsRegistrations(user.id);
+      const created = mockTournaments.filter(t => t.ownerId === user.id);
+      setCreatedTournaments(created);
     }
-  }, [user]);
+  } catch (error) {
+    toast.error('Error fetching tournaments: ' + (error instanceof Error ? error.message : 'Unknown error'));
+  }
+}, [user]);
 
-  const fetchUser = async (): Promise<User> => {
-    const token = localStorage.getItem('authToken');
-    const mockUser: User = { id: '1' };
-    setUser(mockUser);
-    return mockUser;
-  };
-
-  const fetchTournament = async (tournamentId: string): Promise<Tournament> => {
-    return {
-      id: tournamentId,
-      eventName: 'Mock Tournament',
-      status: 'ativo',
-      registrationStart: new Date().toISOString(),
-      registrationEnd: new Date().toISOString()
-    };
-  };
-
-  const fetchTournamentsRegistrations = async (userId: string) => {
+useEffect(() => {
+  const fetchData = async () => {
     try {
-      const mockTournaments: Tournament[] = [
-        {
-          id: '1',
-          eventName: 'My Tournament 1',
-          status: 'ativo',
-          registrationStart: new Date().toISOString(),
-          registrationEnd: new Date().toISOString()
-        },
-        {
-          id: '2',
-          eventName: 'My Tournament 2',
-          status: 'concluido',
-          registrationStart: new Date().toISOString(),
-          registrationEnd: new Date().toISOString()
-        }
-      ];
-      setMyTournaments(mockTournaments);
-      setTotalPages(Math.ceil(mockTournaments.length / 5));
+      await fetchTournaments();
     } catch (error) {
-      toast.error('Error fetching tournament registrations: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('Error loading data: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchTournaments = async () => {
-    try {
-      const mockTournaments: Tournament[] = [
-        {
-          id: '1',
-          eventName: 'Tournament 1',
-          status: 'ativo',
-          registrationStart: new Date().toISOString(),
-          registrationEnd: new Date().toISOString(),
-          ownerId: '1'
-        },
-        {
-          id: '2',
-          eventName: 'Tournament 2',
-          status: 'concluido',
-          registrationStart: new Date().toISOString(),
-          registrationEnd: new Date().toISOString(),
-          ownerId: '2'
-        },
-        {
-          id: '3',
-          eventName: 'Tournament 3',
-          status: 'cancelado',
-          registrationStart: new Date().toISOString(),
-          registrationEnd: new Date().toISOString(),
-          ownerId: '1'
-        }
-      ];
-      setTournaments(mockTournaments);
-      setTotalPages(Math.ceil(mockTournaments.length / 5));
+  fetchData();
+}, [fetchTournaments]);
 
-      if (user) {
-        const created = mockTournaments.filter(t => t.ownerId === user.id);
-        setCreatedTournaments(created);
-      }
-    } catch (error) {
-      toast.error('Error fetching tournaments: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    }
-  };
-
-  const checkUserRole = async () => {
-    setIsAdmin(true);
-  };
 
   const filterTournaments = (tournaments: Tournament[]) => {
     return tournaments.filter(tournament => {

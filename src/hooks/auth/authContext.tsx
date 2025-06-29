@@ -1,5 +1,5 @@
 // contexts/AuthContext.tsx
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback  } from 'react';
 import { useRouter } from 'next/router';
 import { decodeToken, DecodedToken } from '@/interfaces/DecodedToken';
 import { AppUser } from '@/models/AppUser';
@@ -36,11 +36,11 @@ export const AuthProvider = ({ children, requireAuth = true }: AuthProviderProps
     error: null,
   });
 
-  const fetchUser = async (userId: string) => {
+   const fetchUser = useCallback(async (userId: string) => {
     try {
-      console.log("Before fetch user from api")
+      console.log("Before fetch user from api");
       const user = await AppUser.fromAPI(userId);
-      console.log("After fetching user from api: "+user.name)
+      console.log("After fetching user from api: "+user.name);
       setState(prev => ({ ...prev, appUser: user, error: null }));
     } catch (err) {
       console.error('Failed to fetch user:', err);
@@ -49,9 +49,9 @@ export const AuthProvider = ({ children, requireAuth = true }: AuthProviderProps
       }
       throw err;
     }
-  };
+  }, [requireAuth]);
 
-  const authenticate = async () => {
+  const authenticate = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, loading: true }));
       const token = localStorage.getItem('authToken');
@@ -78,15 +78,15 @@ export const AuthProvider = ({ children, requireAuth = true }: AuthProviderProps
     } finally {
       setState(prev => ({ ...prev, loading: false }));
     }
-  };
+  }, [fetchUser, requireAuth, router]);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     if (state.decodedToken?.user_id) {
       await fetchUser(state.decodedToken.user_id);
     }
-  };
+  }, [state.decodedToken?.user_id, fetchUser]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('authToken');
     setState({
       decodedToken: null,
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children, requireAuth = true }: AuthProviderProps
       error: null,
     });
     router.push('/login');
-  };
+  }, [router]);
 
   useEffect(() => {
     if (requireAuth) {
@@ -112,7 +112,7 @@ export const AuthProvider = ({ children, requireAuth = true }: AuthProviderProps
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [router, requireAuth]);
+  }, [authenticate, logout, requireAuth]);
 
   return (
     <AuthContext.Provider value={{ ...state, refreshUser, logout }}>

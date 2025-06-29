@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
@@ -71,47 +71,7 @@ const TournamentGroupsPage: React.FC = () => {
   const [problemType, setProblemType] = useState<string>('');
   const [problemMessage, setProblemMessage] = useState<string>('');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await checkUserRole();
-        await Promise.all([
-          fetchGroups(),
-          fetchMatches(),
-          fetchCategoryRegistrations()
-        ]);
-      } catch (error) {
-        toast.error('Error loading data: ' + (error as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [tournamentId, categoryId]);
-
-  const checkUserRole = async () => {
-    const token = localStorage.getItem('authToken');
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_DEV_BASE_URL}/user_role`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsAdmin(data.roles.includes('admin'));
-      } else {
-        throw new Error('Failed to load user role');
-      }
-    } catch (error) {
-      toast.error('Error fetching user role: ' + (error as Error).message);
-    }
-  };
-
-  const fetchGroups = async () => {
+   const fetchGroups = useCallback(async () => {
     const token = localStorage.getItem('authToken');
     const response = await fetch(`${process.env.REACT_APP_API_DEV_BASE_URL}/beach-tennis/tournaments/${tournamentId}/categories/${categoryId}/groups`, {
       headers: {
@@ -126,9 +86,10 @@ const TournamentGroupsPage: React.FC = () => {
     } else {
       throw new Error('Failed to load groups');
     }
-  };
+  }, [tournamentId, categoryId]);
 
-  const fetchMatches = async () => {
+
+  const fetchMatches = useCallback(async () => {
     const token = localStorage.getItem('authToken');
     const response = await fetch(`${process.env.REACT_APP_API_DEV_BASE_URL}/beach-tennis/tournaments/${tournamentId}/categories/${categoryId}/matches`, {
       headers: {
@@ -143,9 +104,9 @@ const TournamentGroupsPage: React.FC = () => {
     } else {
       throw new Error('Failed to load matches');
     }
-  };
+  }, [tournamentId, categoryId]);
 
-  const fetchCategoryRegistrations = async () => {
+   const fetchCategoryRegistrations = useCallback(async () => {
     const token = localStorage.getItem('authToken');
     const response = await fetch(`${process.env.REACT_APP_API_DEV_BASE_URL}/beach-tennis/category-registrations/${categoryId}/${tournamentId}`, {
       headers: {
@@ -160,7 +121,26 @@ const TournamentGroupsPage: React.FC = () => {
     } else {
       throw new Error('Failed to load category registrations');
     }
-  };
+  }, [tournamentId, categoryId]);
+
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await Promise.all([
+          fetchGroups(),
+          fetchMatches(),
+          fetchCategoryRegistrations()
+        ]);
+      } catch (error) {
+        toast.error('Error loading data: ' + (error as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [fetchCategoryRegistrations, fetchGroups, fetchMatches]);
 
   //@typescript-eslint/no-unused-vars
   const getPlayerById = (playerId: string): Player | null => {

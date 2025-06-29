@@ -2,7 +2,7 @@
 import { NextComponentType, NextPage, NextPageContext } from 'next';
 
 declare module 'next' {
-  export type NextPageWithAuth<P = {}, IP = P> = NextPage<P, IP> & {
+  export type NextPageWithAuth<P = {0}, IP = P> = NextPage<P, IP> & {
     authRequired?: boolean;
   };
 
