@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
-  Grid,
   Heading,
   Text,
   Input,
@@ -13,23 +12,33 @@ import {
   useToast,
   Icon,
   Image,
-  Spinner,
-  Center,
   Flex,
+  useBreakpointValue,
+  IconButton,
+  Checkbox,
+  CheckboxGroup,
+  InputLeftElement,
+  SimpleGrid
 } from '@chakra-ui/react';
-import { FiHelpCircle, FiSearch, FiCheckCircle, FiX, FiCheck } from 'react-icons/fi';
+import { FiHelpCircle, FiSearch, FiCheckCircle, FiX, FiCheck, FiChevronLeft, FiChevronRight, FiAward, FiMapPin, FiCalendar } from 'react-icons/fi';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
-import { InputLeftElement } from '@chakra-ui/react';
 import { NextPageWithAuth } from 'next';
+import axios from 'axios';
+import { useAuth } from '@/hooks/auth/authContext';
+
 interface Tournament {
-  id: number;
+  id: string;
   name: string;
   location: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   prize: number;
   status: 'ativo' | 'cancelado' | 'concluido' | 'em_breve';
-  image: string;
+  bannerUrl: string;
+  sportType: 'BEACH_TENNIS' | 'TENNIS' | 'BEACH_VOLLEYBALL';
+  registrationDeadline: string;
+  isFeatured?: boolean;
   type: 'torneio' | 'ranking';
 }
 
@@ -40,199 +49,77 @@ interface StatusProps {
 }
 
 const HomePage: NextPageWithAuth = () => {
+  const { appUser, decodedToken } = useAuth();
+
   const bgColor = 'gray.50';
   const cardBg = 'white';
   const textColor = 'gray.700';
   const router = useRouter();
   const toast = useToast();
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
-  // State for the page
-  const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [filteredTournaments, setFilteredTournaments] = useState<Tournament[]>([]);
   const [searchText, setSearchText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
+  const handleSportChange = (values: string[]) => {
+    setSelectedSports(values);
+  };
 
-
-
-  // Filter tournaments when search text or tournaments change
-  useEffect(() => {
-
-    if (searchText.trim() === '') {
-      setFilteredTournaments(tournaments);
-    } else {
-      const searchLower = searchText.toLowerCase();
-      setFilteredTournaments(
-        tournaments.filter(tournament =>
-          tournament.name.toLowerCase().includes(searchLower) ||
-          tournament.location.toLowerCase().includes(searchLower) ||
-          tournament.type.toLowerCase().includes(searchLower)
-        )
-      );
-    }
-  }, [searchText, tournaments]);
-
-  const fetchFeaturedTournaments = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Mock data for demo
-      setFeaturedTournaments([
-        {
-          id: 1,
-          name: 'Torneio de Verão',
-          location: 'Praia Copacabana',
-          date: '15/12/2023',
-          prize: 5000,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'torneio'
-        },
-        {
-          id: 2,
-          name: 'Campeonato Estadual',
-          location: 'Clube de Praia',
-          date: '20/01/2024',
-          prize: 10000,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'torneio'
-        },
-        {
-          id: 3,
-          name: 'Ranking Nacional',
-          location: 'Brasil',
-          date: 'Atualizado mensalmente',
-          prize: 0,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'ranking'
-        }
-      ]);
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar torneios em destaque: ' + error,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
 
   const fetchTournaments = useCallback(async () => {
-    if (currentPage === -1) return;
+  setIsLoading(true);
+  try {
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tournaments`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
+    
+    // Transformar os dados da API para o formato esperado
+    const formattedTournaments = response.data.map((tournament: any) => ({
+      id: tournament.id,
+      name: tournament.eventName,
+      location: tournament.tournamentLocation || 'Local não especificado',
+      startDate: tournament.tournamentStart,
+      endDate: tournament.tournamentEnd,
+      prize: tournament.prize || 0,
+      status: tournament.status?.toLowerCase() || 'ativo',
+      bannerUrl: tournament.imageHash,
+      sportType: tournament.sportType || 'BEACH_TENNIS', // Default sport
+      registrationDeadline: tournament.registrationEnd,
+      isFeatured: tournament.isFeatured || false,
+      type: tournament.type || 'torneio'
+    }));
 
-    setIsLoading(true);
-    try {
-      // Mock data for demo
-      const mockData: Tournament[] = [
-        {
-          id: 4,
-          name: 'Torneio Amador',
-          location: 'Parque Esportivo',
-          date: '05/01/2024',
-          prize: 2000,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'torneio'
-        },
-        {
-          id: 5,
-          name: 'Liga Profissional',
-          location: 'Arena Esportiva',
-          date: '10/02/2024',
-          prize: 15000,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'torneio'
-        },
-        {
-          id: 6,
-          name: 'Torneio de Inverno',
-          location: 'Ginásio Municipal',
-          date: '25/07/2024',
-          prize: 8000,
-          status: 'em_breve',
-          image: 'https://images.unsplash.com/photo-1521412644187-c49fa049e84d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'torneio'
-        },
-        {
-          id: 7,
-          name: 'Ranking Estadual',
-          location: 'Rio de Janeiro',
-          date: 'Atualizado semanalmente',
-          prize: 0,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'ranking'
-        },
-        {
-          id: 8,
-          name: 'Copa das Praias',
-          location: 'Praia de Ipanema',
-          date: '15/03/2024',
-          prize: 12000,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'torneio'
-        },
-        {
-          id: 9,
-          name: 'Ranking Municipal',
-          location: 'São Paulo',
-          date: 'Atualizado quinzenalmente',
-          prize: 0,
-          status: 'ativo',
-          image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'ranking'
-        },
-        {
-          id: 10,
-          name: 'Torneio Primavera',
-          location: 'Clube Campestre',
-          date: '10/09/2024',
-          prize: 7500,
-          status: 'em_breve',
-          image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-          type: 'torneio'
-        }
-      ];
+   console.log('puxando')
 
-      setTournaments(prev => [...prev, ...mockData]);
-      if (mockData.length === 0) setCurrentPage(-1);
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Falha ao carregar torneios: ' + error,
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, toast]);
+    setTournaments(formattedTournaments);
+    setFilteredTournaments(formattedTournaments);
+    
+    console.log('Torneios carregados:', formattedTournaments);
+  } catch (error) {
+    console.error('Erro ao carregar torneios:', error);
+    toast({
+      title: 'Erro',
+      description: 'Falha ao carregar torneios. Mostrando dados de exemplo.',
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+    });
+  } finally {
+    setIsLoading(false);
+  }
+}, [toast]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      await fetchFeaturedTournaments();
-      await fetchTournaments();
-    };
-
-    fetchData();
-  }, [fetchFeaturedTournaments, fetchTournaments]);
-
-  const loadMoreTournaments = () => {
-    setCurrentPage(prev => prev + 1);
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchText(e.target.value);
-  };
+useEffect(() => {
+  if (decodedToken) {
+    fetchTournaments();
+  } 
+}, [decodedToken,fetchTournaments]);
 
   const getStatusProps = (status: Tournament['status']): StatusProps => {
     switch (status) {
@@ -244,35 +131,65 @@ const HomePage: NextPageWithAuth = () => {
     }
   };
 
-  const renderTournamentCard = (tournament: Tournament, isFeatured: boolean = false) => {
+  const getSportProps = (sportType: Tournament['sportType']) => {
+    switch (sportType) {
+      case 'BEACH_TENNIS': return { color: 'teal', text: 'Beach Tennis' };
+      case 'TENNIS': return { color: 'blue', text: 'Tênis' };
+      case 'BEACH_VOLLEYBALL': return { color: 'purple', text: 'Vôlei de Praia' };
+      default: return { color: 'gray', text: 'Outro' };
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  };
+
+  const handlePrevClick = () => {
+    setCarouselIndex(prev => Math.max(0, prev - 1));
+  };
+
+  const handleNextClick = () => {
+    setCarouselIndex(prev => prev + 1);
+  };
+
+    const handleTournamentClick = (id: string) => {
+    console.log("aq")
+    router.push(`/tournaments/${id}`);
+  };
+
+  const renderTournamentCard = (tournament: Tournament) => {
     const statusProps = getStatusProps(tournament.status);
+    const sportProps = getSportProps(tournament.sportType);
 
     return (
       <Box
         key={tournament.id}
-        onClick={() => router.push(`/tournament/${tournament.id}`)}
+        onClick={() => handleTournamentClick(tournament.id)}
         bg={cardBg}
         borderRadius="lg"
         overflow="hidden"
-        boxShadow="md"
-        transition="all 0.2s"
+        boxShadow="xl"
+        transition="all 0.3s cubic-bezier(.25,.8,.25,1)"
         _hover={{
-          transform: 'translateY(-4px)',
-          boxShadow: 'xl',
+          transform: 'translateY(-5px)',
+          boxShadow: '2xl',
           cursor: 'pointer'
         }}
-        h="100%"
-        display="flex"
-        flexDirection="column"
+        minW={{ base: '280px', md: '320px' }}
+        mx={2}
       >
         <Box
-          h={isFeatured ? "200px" : "160px"}
+          h="200px"
           bg="gray.200"
           overflow="hidden"
           position="relative"
         >
           <Image
-            src={tournament.image}
+            src={tournament.bannerUrl}
             alt={tournament.name}
             objectFit="cover"
             w="100%"
@@ -285,9 +202,10 @@ const HomePage: NextPageWithAuth = () => {
             colorScheme={statusProps.color}
             px="2"
             py="1"
-            borderRadius="md"
+            borderRadius="full"
             display="flex"
             alignItems="center"
+            boxShadow="md"
           >
             <Icon as={statusProps.icon} mr="1" />
             {statusProps.text}
@@ -296,30 +214,38 @@ const HomePage: NextPageWithAuth = () => {
             position="absolute"
             top="2"
             left="2"
-            colorScheme={tournament.type === 'ranking' ? 'purple' : 'teal'}
+            colorScheme={sportProps.color}
             px="2"
             py="1"
-            borderRadius="md"
+            borderRadius="full"
+            boxShadow="md"
           >
-            {tournament.type === 'ranking' ? 'Ranking' : 'Torneio'}
+            {sportProps.text}
           </Badge>
         </Box>
         <Box p="4" flex="1" display="flex" flexDirection="column">
-          <Heading size="md" mb="2" noOfLines={1}>
+          <Heading size="md" mb="2" noOfLines={1} color="gray.800">
             {tournament.name}
           </Heading>
 
-          <Stack spacing="1" mt="auto">
-            <Text fontSize="sm" color={textColor}>
-              <Text as="span" fontWeight="semibold">Local:</Text> {tournament.location}
-            </Text>
-            <Text fontSize="sm" color={textColor}>
-              <Text as="span" fontWeight="semibold">Data:</Text> {tournament.date}
-            </Text>
-            {tournament.type === 'torneio' && (
-              <Text fontSize="sm" color={textColor}>
-                <Text as="span" fontWeight="semibold">Prêmio:</Text> R${tournament.prize.toLocaleString()}
+          <Stack spacing="2" mt="auto">
+            <Flex align="center">
+              <Icon as={FiMapPin} color="gray.500" mr="2" />
+              <Text fontSize="sm" color="gray.600">{tournament.location}</Text>
+            </Flex>
+            <Flex align="center">
+              <Icon as={FiCalendar} color="gray.500" mr="2" />
+              <Text fontSize="sm" color="gray.600">
+                {formatDate(tournament.startDate)} - {formatDate(tournament.endDate)}
               </Text>
+            </Flex>
+            {tournament.prize > 0 && (
+              <Flex align="center">
+                <Icon as={FiAward} color="gray.500" mr="2" />
+                <Text fontSize="sm" color="gray.600">
+                  Prêmio: R$ {tournament.prize.toLocaleString('pt-BR')}
+                </Text>
+              </Flex>
             )}
           </Stack>
         </Box>
@@ -327,95 +253,191 @@ const HomePage: NextPageWithAuth = () => {
     );
   };
 
+const renderCarousel = (items: Tournament[], title: string, isFeatured: boolean = false) => {
+  const itemsPerView = isMobile ? 1 : 3; // 1 item no mobile, 3 no desktop
+  const displayItems = isFeatured ? items.filter(item => item.isFeatured) : items;
+  const totalPages = Math.ceil(displayItems.length / itemsPerView);
+  const currentPage = carouselIndex;
+
+  const handlePrev = () => {
+    setCarouselIndex(prev => Math.max(0, prev - 1));
+  };
+
+  const handleNext = () => {
+    setCarouselIndex(prev => Math.min(totalPages - 1, prev + 1));
+  };
+
+  // Pega os itens para a página atual
+  const startIndex = currentPage * itemsPerView;
+  const visibleItems = displayItems.slice(startIndex, startIndex + itemsPerView);
+
+  return (
+    <Box mb={12}>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading size="xl" color={textColor}>
+          {title}
+        </Heading>
+        {displayItems.length > itemsPerView && (
+          <Flex>
+            <IconButton
+              icon={<FiChevronLeft />}
+              aria-label="Anterior"
+              onClick={handlePrev}
+              mr={2}
+              isDisabled={currentPage === 0}
+            />
+            <IconButton
+              icon={<FiChevronRight />}
+              aria-label="Próximo"
+              onClick={handleNext}
+              isDisabled={currentPage >= totalPages - 1}
+            />
+          </Flex>
+        )}
+      </Flex>
+
+      {isLoading ? (
+        <SimpleGrid columns={{ base: 1, md: 3 }} gap={6}>
+          {[...Array(itemsPerView)].map((_, i) => (
+            <Skeleton key={i} h="350px" borderRadius="lg" />
+          ))}
+        </SimpleGrid>
+      ) : displayItems.length === 0 ? (
+        <Box textAlign="center" py={10} bg={cardBg} borderRadius="lg">
+          <Text fontSize="lg">
+            {isFeatured
+              ? 'Nenhum torneio em destaque no momento'
+              : 'Nenhum torneio encontrado com esses filtros'}
+          </Text>
+        </Box>
+      ) : (
+        <Flex
+          overflow="hidden"
+          position="relative"
+          minH="400px"
+        >
+          <SimpleGrid 
+            columns={{ base: 1, md: 3 }}
+            gap={6}
+            width="100%"
+            transition="transform 0.3s ease"
+            transform={{
+              base: `translateX(-${currentPage * 100}%)`,
+              md: 'none'
+            }}
+          >
+            {visibleItems.map(tournament => (
+              <Box key={tournament.id}>
+                {renderTournamentCard(tournament)}
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Flex>
+      )}
+    </Box>
+  );
+};
+
   return (
     <Layout>
       <Box minH="100vh" bg={bgColor}>
-        {/* Main Content Area */}
-        <Box flex="1" p={{ base: 4, md: 6 }} maxW="1200px" mx="auto">
-          {/* Featured Tournaments */}
-          {featuredTournaments.length > 0 && (
-            <>
-              <Heading size="xl" mb={6} color={textColor}>
-                Torneios em Destaque
-              </Heading>
-
-              <Grid
-                templateColumns={{
-                  base: '1fr',
-                  sm: 'repeat(2, 1fr)',
-                  lg: 'repeat(3, 1fr)'
-                }}
-                gap={6}
-                mb={10}
-              >
-                {featuredTournaments.map(tournament =>
-                  renderTournamentCard(tournament, true)
-                )}
-              </Grid>
-            </>
-          )}
-
-          {/* All Tournaments */}
-          <Heading size="xl" mb={6} color={textColor}>
-            Torneios e Rankings
-          </Heading>
-
-          <InputGroup mb={6}>
-            <InputLeftElement pointerEvents="none">
-              <FiSearch color="gray.300" />
-            </InputLeftElement>
-            <Input
-              placeholder="Pesquise torneios e rankings (nome, local ou tipo)"
-              value={searchText}
-              onChange={handleSearchChange}
-              bg={cardBg}
-            />
-          </InputGroup>
-
-          {isLoading && filteredTournaments.length === 0 ? (
-            <Grid
-              templateColumns={{
-                base: '1fr',
-                sm: 'repeat(2, 1fr)',
-                lg: 'repeat(3, 1fr)'
-              }}
-              gap={6}
+        {/* Hero Section */}
+        <Box
+          bgImage="url('https://diariodorio.com/wp-content/uploads/2025/03/Beach-Tennis-na-Praia-de-Copacabana.jpeg')"
+          bgSize="cover"
+          bgPosition="center"
+          py={20}
+          px={4}
+          position="relative"
+          _before={{
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bg: 'rgba(0,0,0,0.5)',
+            zIndex: 1
+          }}
+        >
+          <Box position="relative" zIndex={2} maxW="1200px" mx="auto">
+            <Heading
+              as="h1"
+              size="2xl"
+              color="white"
+              mb={6}
+              textShadow="0 2px 4px rgba(0,0,0,0.5)"
             >
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} h="300px" borderRadius="lg" />
-              ))}
-            </Grid>
-          ) : filteredTournaments.length === 0 ? (
-            <Box textAlign="center" py={10}>
-              <Text fontSize="lg">
-                {searchText ? 'Nenhum torneio ou ranking encontrado' : 'Nenhum torneio ou ranking disponível'}
-              </Text>
-            </Box>
-          ) : (
-            <Grid
-              templateColumns={{
-                base: '1fr',
-                sm: 'repeat(2, 1fr)',
-                lg: 'repeat(3, 1fr)'
-              }}
-              gap={6}
+              Descubra os melhores torneios esportivos
+            </Heading>
+            <Text
+              fontSize="xl"
+              color="white"
+              mb={8}
+              textShadow="0 1px 2px rgba(0,0,0,0.5)"
+              maxW="600px"
             >
-              {filteredTournaments.map(tournament => renderTournamentCard(tournament, false))}
-            </Grid>
-          )}
+              Participe dos maiores eventos de beach tennis, tênis e vôlei de praia do país
+            </Text>
+            <Button
+              colorScheme="green"
+              size="lg"
+              onClick={() => router.push('/tournaments')}
+            >
+              Explorar Torneios
+            </Button>
+          </Box>
+        </Box>
 
-          {currentPage !== -1 && (
-            <Flex justify="center" mt={8}>
-              <Button
-                colorScheme="green"
-                variant="outline"
-                onClick={loadMoreTournaments}
-                isLoading={isLoading}
-              >
-                {isLoading ? 'Carregando...' : 'Carregar mais'}
-              </Button>
-            </Flex>
-          )}
+        {/* Main Content */}
+        <Box flex="1" p={{ base: 4, md: 8 }} maxW="1200px" mx="auto">
+          {/* Filtros */}
+          <Box
+            bg={cardBg}
+            p={6}
+            borderRadius="xl"
+            boxShadow="md"
+            mb={10}
+            position="relative"
+            top="-16"
+            zIndex={2}
+          >
+            <Heading size="lg" mb={4} color="gray.700">
+              Encontre seu torneio ideal
+            </Heading>
+
+            <InputGroup mb={6}>
+              <InputLeftElement pointerEvents="none">
+                <FiSearch color="gray.300" />
+              </InputLeftElement>
+              <Input
+                placeholder="Pesquise torneios por nome, local ou esporte"
+                value={searchText}
+                onChange={handleSearchChange}
+                size="lg"
+              />
+            </InputGroup>
+
+            <CheckboxGroup
+              value={selectedSports}
+              onChange={handleSportChange}
+              colorScheme="green"
+            >
+              <Flex wrap="wrap" gap={6}>
+                <Box>
+                  <Text fontWeight="semibold" mb={2}>Esportes</Text>
+                  <Stack spacing={2}>
+                    <Checkbox value="BEACH_TENNIS">Beach Tennis</Checkbox>
+                    <Checkbox value="TENNIS">Tênis</Checkbox>
+                    <Checkbox value="BEACH_VOLLEYBALL">Vôlei de Praia</Checkbox>
+                  </Stack>
+                </Box>
+              </Flex>
+            </CheckboxGroup>
+          </Box>
+
+  {renderCarousel(filteredTournaments, 'Torneios em Destaque', true)}
+{renderCarousel(filteredTournaments, 'Todos os Torneios')}
         </Box>
       </Box>
     </Layout>

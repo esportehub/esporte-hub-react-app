@@ -1,7 +1,3 @@
-//@typescript-eslint/no-require-imports
-//@typescript-eslint/no-explicit-any
-//@typescript-eslint/no-unused-vars
-//@typescript-eslint/no-unused-expressions
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import {
@@ -82,56 +78,63 @@ const TournamentsPage: NextPageWithAuth = () => {
   const itemsPerPage = 5;
 
   const fetchTournaments = useCallback(async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tournaments`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      }
-    });
-    
-    console.log('Dados recebidos:', response.data);
-    
-    const allTournaments = response.data.map((tournament: any) => ({
-      id: tournament.id,
-      eventName: tournament.eventName,
-      status: tournament.status?.toLowerCase() || 'ativo',
-      registrationStart: tournament.registrationStart,
-      registrationEnd: tournament.registrationEnd,
-      createdBy: tournament.createdBy
-    }));
-    
-    setTournaments(allTournaments);
-    setMyTournaments(allTournaments);
-    
-    const userCreatedTournaments = allTournaments.filter((t: Tournament) => 
-      t.createdBy === appUser?.uid
-    );
-    setCreatedTournaments(userCreatedTournaments);
-    
-  } catch (err) {
-    console.error('Erro ao buscar torneios:', err);
-    setError('Erro ao carregar torneios. Tente novamente mais tarde.');
-    toast({
-      title: 'Erro',
-      description: 'Falha ao carregar torneios',
-      status: 'error',
-      duration: 5000,
-      isClosable: true,
-    });
-  } finally {
-    setLoading(false);
-  }
-}, [appUser?.uid, toast]);
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tournaments`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+      
+      const allTournaments = response.data.map((tournament: any) => ({
+        id: tournament.id,
+        eventName: tournament.eventName,
+        status: tournament.status?.toLowerCase() || 'ativo',
+        registrationStart: tournament.registrationStart,
+        registrationEnd: tournament.registrationEnd,
+        createdBy: tournament.createdBy
+      }));
+      
+      setTournaments(allTournaments);
+      
+      // Filtrar torneios que o usuário está inscrito (simulação - ajuste conforme sua API)
+      const userTournaments = allTournaments.filter((t: Tournament) => 
+        true // Substitua por lógica real de verificação de inscrição
+      );
+      setMyTournaments(userTournaments);
+      
+      // Filtrar torneios criados pelo usuário
+      const userCreatedTournaments = allTournaments.filter((t: Tournament) => 
+        t.createdBy === appUser?.uid
+      );
+      setCreatedTournaments(userCreatedTournaments);
+      
+      // Verificar se usuário é admin (simulação - ajuste conforme sua lógica)
 
-useEffect(() => {
-  if (decodedToken) {
-    fetchTournaments();
-  }
-}, [decodedToken, fetchTournaments]);
+      //setIsAdmin(decodedToken?.roles?.includes('admin') || false);
+      
+    } catch (err) {
+      console.error('Erro ao buscar torneios:', err);
+      setError('Erro ao carregar torneios. Tente novamente mais tarde.');
+      toast({
+        title: 'Erro',
+        description: 'Falha ao carregar torneios',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [appUser?.uid, toast]);
 
+  useEffect(() => {
+    if (decodedToken) {
+      fetchTournaments();
+    }
+  }, [decodedToken, fetchTournaments]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -147,7 +150,7 @@ useEffect(() => {
       case 'ativo': return 'Ativo';
       case 'cancelado': return 'Cancelado';
       case 'concluido': return 'Concluído';
-      default: return status; // Retorna o valor original se não for um dos esperados
+      default: return status;
     }
   };
 
@@ -194,13 +197,18 @@ useEffect(() => {
     setFilterOpen(false);
   };
 
+  const handleTournamentClick = (id: string) => {
+    console.log("aq")
+    router.push(`/tournaments/${id}`);
+  };
+
   const renderTournamentCard = (tournament: Tournament) => {
     return (
       <Card 
         key={tournament.id} 
         mb={4} 
         cursor="pointer"
-        onClick={() => router.push(`/tournament/${tournament.id}`)}
+        onClick={() => handleTournamentClick(tournament.id)}
         _hover={{ transform: 'translateY(-2px)', boxShadow: 'lg' }}
         transition="all 0.2s"
       >
@@ -342,7 +350,7 @@ useEffect(() => {
                 aria-label="Criar torneio"
                 icon={<AddIcon />}
                 colorScheme="blue"
-                onClick={() => router.push('/tournament/create')}
+                onClick={() => router.push('/tournaments/create')}
               />
             )}
           </Flex>
