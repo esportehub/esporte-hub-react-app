@@ -6,7 +6,6 @@ import {
   Heading,
   Text,
   Avatar,
-  Tag,
   Button,
   IconButton,
   Modal,
@@ -25,7 +24,6 @@ import {
   Progress,
   Card,
   CardBody,
-  CardHeader,
   useDisclosure,
   useToast,
   Spinner,
@@ -37,11 +35,6 @@ import {
   TabPanels,
   TabPanel,
   Image,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  PopoverBody,
-  PopoverArrow,
   Menu,
   MenuButton,
   MenuList,
@@ -60,16 +53,13 @@ import {
   AddIcon,
   CheckIcon,
   CloseIcon,
-  CheckCircleIcon,
-  CopyIcon,
   SettingsIcon,
   InfoIcon,
   TimeIcon,
   CalendarIcon,
-  PhoneIcon,
-  EmailIcon
+  PhoneIcon
 } from '@chakra-ui/icons';
-import { FaMap, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaTrophy, FaInfoCircle, FaScroll } from 'react-icons/fa';
 import { IoFilterOutline, IoPeopleOutline, IoShirtOutline } from 'react-icons/io5';
 import axios from 'axios';
 import Layout from '@/components/Layout';
@@ -77,7 +67,6 @@ import { useAuth } from '@/hooks/auth/authContext';
 import { NextPageWithAuth } from 'next';
 import banner from '@/assets/tournament-banner.jpg';
 import logo from '@/assets/logo-teste.jpg';
-import { FaTrophy, FaInfoCircle, FaScroll } from 'react-icons/fa';
 
 interface Category {
   id: string;
@@ -85,19 +74,38 @@ interface Category {
   status: string;
   gender: string;
   category: string;
-  maxRegistrations: number;
-  currentRegistrations: number;
+  max_registrations: number;
+  current_registrations: number;
   isSorted: boolean;
-  disputeModel: string;
-  gameType: string;
+  dispute_model: string;
+  game_type: string;
+  min_age: number;
+  max_age: number;
   createdAt: string;
   imageHash?: string;
+}
+
+interface Tournament {
+  id: string;
+  eventName: string;
+  status: string;
+  tournamentStart: string;
+  tournamentEnd: string;
+  registrationStart: string;
+  registrationEnd: string;
+  tournamentLocation: string;
+  contactEmail: string;
+  contactPhone: string;
+  tournamentRules: string;
+  waitlistInfo: string;
+  imageHash?: string;
+  createdByUid: string;
 }
 
 const TournamentView: NextPageWithAuth = () => {
   const router = useRouter();
   const { id } = router.query;
-  const { appUser, decodedToken } = useAuth();
+  const { appUser } = useAuth();
   const toast = useToast();
 
   // Estados do torneio
@@ -121,14 +129,9 @@ const TournamentView: NextPageWithAuth = () => {
 
   // Configurações responsivas
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const cardDirection = useBreakpointValue({ base: 'column', md: 'row' });
   const buttonSize = useBreakpointValue({ base: 'md', md: 'lg' });
-
-  // Cores e estilos
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const headerBg = useColorModeValue('gray.50', 'gray.700');
-  const hoverBg = useColorModeValue('gray.50', 'gray.600');
   const borderColor = useColorModeValue('gray.200', 'gray.600');
+  const headerBg = useColorModeValue('gray.50', 'gray.700');
 
   // Buscar dados do torneio
   const fetchTournament = useCallback(async (tournamentId: string) => {
@@ -136,7 +139,7 @@ const TournamentView: NextPageWithAuth = () => {
       setLoading(true);
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/tournaments/${tournamentId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       });
 
@@ -168,7 +171,7 @@ const TournamentView: NextPageWithAuth = () => {
       });
 
       setCategories(response.data);
-      setFilteredCategories(response.data.filter((cat: Category) => cat.status === 'ativo'));
+      setFilteredCategories(response.data); // Mostra todas as categorias inicialmente
 
     } catch (err) {
       console.error('Error fetching categories:', err);
@@ -214,18 +217,17 @@ const TournamentView: NextPageWithAuth = () => {
   };
 
   // Aplicar filtros
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let result = categories;
 
-    if (selectedStatuses.length > 0) {
+    /*if (selectedStatuses.length > 0) {
       result = result.filter(cat => selectedStatuses.includes(cat.status));
-    } else {
-      result = result.filter(cat => cat.status === 'ativo');
     }
 
     if (selectedCategories.length > 0) {
       result = result.filter(cat => selectedCategories.includes(cat.category));
     }
+    */
 
     if (searchQuery) {
       result = result.filter(cat =>
@@ -233,21 +235,23 @@ const TournamentView: NextPageWithAuth = () => {
       );
     }
 
-    if (appUser?.gender) {
+    /*if (appUser?.gender) {
       result = result.filter(cat =>
         cat.gender === 'Mista' ||
         cat.gender.toLowerCase() === appUser.gender.toLowerCase()
       );
     }
+    */
 
     setFilteredCategories(result);
-    setIsFilterApplied(selectedStatuses.length > 0 || selectedCategories.length > 0);
-  };
+    setIsFilterApplied(selectedStatuses.length > 0 || selectedCategories.length > 0 || searchQuery.length > 0);
+  }, [categories, selectedStatuses, selectedCategories, searchQuery, appUser?.gender]);
 
   // Efeito para aplicar filtros quando mudam
   useEffect(() => {
     applyFilters();
-  }, [selectedStatuses, selectedCategories, searchQuery, categories]);
+  }, [applyFilters]);
+  
 
   // Modal de detalhes da categoria
   const openCategoryModal = (category: Category) => {
@@ -257,126 +261,133 @@ const TournamentView: NextPageWithAuth = () => {
 
   // Componente de card de categoria
   const CategoryCard = ({ category }: { category: Category }) => {
-    const progressValue = category.maxRegistrations > 0
-      ? (category.currentRegistrations / category.maxRegistrations) * 100
+    const progressValue = category.max_registrations > 0
+      ? ((category.current_registrations || 0) / category.max_registrations) * 100
       : 0;
 
     return (
-      <Card
-        mb={4}
-        cursor="pointer"
-        _hover={{ transform: 'translateY(-2px)', boxShadow: 'md' }}
-        transition="all 0.2s"
+      <Card 
         border="1px solid"
-        borderColor={borderColor}
+        borderColor="gray.200"
+        _hover={{ transform: 'translateY(-4px)', shadow: 'lg' }}
+        transition="all 0.2s"
       >
         <CardBody>
           <Stack spacing={4}>
-            <Flex direction={{ base: 'column', md: 'row' }} align="center" gap={4}>
-              <Avatar
-                src={category.imageHash ? `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${category.imageHash}` : '/default-category.png'}
-                size="lg"
-              />
-
-              <Box flex="1">
-                <Flex justify="space-between" align="flex-start">
-                  <Box>
-                    <Heading size="md">{category.name}</Heading>
-                    <Flex align="center" mt={2} wrap="wrap" gap={2}>
-                      <Badge colorScheme={getStatusColor(category.status)}>
-                        {getStatusText(category.status)}
-                      </Badge>
-                      <Badge colorScheme="purple" variant="outline">
-                        {category.disputeModel}
-                      </Badge>
-                      <Badge colorScheme="blue" variant="outline">
-                        {category.gameType}
-                      </Badge>
-                      <Badge colorScheme="teal" variant="outline">
-                        {category.gender}
-                      </Badge>
-                    </Flex>
-                  </Box>
-
-                  {isAdmin && (
-                    <Menu>
-                      <MenuButton
-                        as={IconButton}
-                        aria-label="Opções da categoria"
-                        icon={<SettingsIcon />}
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <MenuList>
-                        <MenuItem icon={<CopyIcon />} onClick={(e) => e.stopPropagation()}>
-                          Copiar categoria
-                        </MenuItem>
-                        <MenuItem
-                          icon={<InfoIcon />}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openCategoryModal(category);
-                          }}
-                        >
-                          Ver detalhes
-                        </MenuItem>
-                        <MenuDivider />
-                        <MenuItem
-                          icon={<CloseIcon />}
-                          color="red.500"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          Excluir categoria
-                        </MenuItem>
-                      </MenuList>
-                    </Menu>
-                  )}
-                </Flex>
-
-                <Box mt={4}>
-                  <Flex justify="space-between" mb={1}>
-                    <Text fontSize="sm" color="gray.500">
-                      Vagas: {category.currentRegistrations}/{category.maxRegistrations}
-                    </Text>
-                    {isAdmin && (
-                      <Text fontSize="sm" color="red.500">
-                        2 não pagos
-                      </Text>
-                    )}
-                  </Flex>
-                  <Progress value={progressValue} size="sm" colorScheme="blue" borderRadius="full" />
-                </Box>
-
-                <SimpleGrid columns={2} spacing={2} mt={4}>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    leftIcon={<IoPeopleOutline />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/tournament/${id}/category/${category.id}/subscribers`);
-                    }}
-                  >
-                    Inscritos
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    colorScheme="blue"
-                    leftIcon={<IoShirtOutline />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      category.isSorted
-                        ? router.push(`/tournament/${id}/category/${category.id}/groups`)
-                        : router.push(`/tournament/${id}/category/${category.id}/subscribers`);
-                    }}
-                  >
-                    {category.isSorted ? 'Grupos' : 'Gerenciar'}
-                  </Button>
-                </SimpleGrid>
-              </Box>
+            {/* Header com nome e status */}
+            <Flex justify="space-between" align="center">
+              <Heading size="md" noOfLines={1}>
+                {category.name}
+              </Heading>
+              <Badge 
+                colorScheme={getStatusColor(category.status)}
+                px={2}
+                py={1}
+                borderRadius="md"
+              >
+                {getStatusText(category.status)}
+              </Badge>
             </Flex>
+
+            {/* Detalhes da categoria */}
+            <Stack spacing={2}>
+              <Flex align="center">
+                <Box as={IoShirtOutline} mr={2} color="gray.500" />
+                <Text fontSize="sm" color="gray.600">
+                  {category.game_type === 'individual' ? 'Individual' : 'Duplas'} • {category.dispute_model}
+                </Text>
+              </Flex>
+
+              <Flex align="center">
+                <Box as={FaMapMarkerAlt} mr={2} color="gray.500" boxSize={3} />
+                <Text fontSize="sm" color="gray.600">
+                  {category.gender === 'masculino' ? 'Masculino' : 
+                   category.gender === 'feminino' ? 'Feminino' : 'Misto'} • {category.category}
+                </Text>
+              </Flex>
+
+              <Flex align="center">
+                <Box as={CalendarIcon} mr={2} color="gray.500" boxSize={3} />
+                <Text fontSize="sm" color="gray.600">
+                  Idade: {category.min_age}-{category.max_age} anos
+                </Text>
+              </Flex>
+            </Stack>
+
+            {/* Progresso de inscrições */}
+            <Box mt={4}>
+              <Flex justify="space-between" mb={1}>
+                <Text fontSize="sm" fontWeight="medium">
+                  Vagas preenchidas
+                </Text>
+                <Text fontSize="sm" color="blue.600" fontWeight="bold">
+                  {category.current_registrations || 0}/{category.max_registrations}
+                </Text>
+              </Flex>
+              <Progress 
+                value={progressValue} 
+                size="sm" 
+                colorScheme="blue" 
+                borderRadius="full"
+              />
+            </Box>
+
+            {/* Botões de ação */}
+            <Flex mt={6} gap={2}>
+              <Button
+                flex={1}
+                variant="outline"
+                colorScheme="blue"
+                size="sm"
+                leftIcon={<IoPeopleOutline />}
+                onClick={() => router.push(`/tournament/${id}/category/${category.id}/subscribers`)}
+              >
+                Inscritos
+              </Button>
+              
+              <Button
+                flex={1}
+                colorScheme="blue"
+                size="sm"
+                leftIcon={<IoShirtOutline />}
+                onClick={() => category.isSorted 
+                  ? router.push(`/tournament/${id}/category/${category.id}/groups`)
+                  : router.push(`/tournament/${id}/category/${category.id}/subscribers`)
+                }
+              >
+                {category.isSorted ? 'Grupos' : 'Gerenciar'}
+              </Button>
+            </Flex>
+
+            {/* Ações rápidas para admin */}
+            {isAdmin && (
+              <Flex mt={2} gap={2}>
+                <Button
+                  flex={1}
+                  variant="ghost"
+                  size="sm"
+                  colorScheme="red"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Implementar lógica de exclusão
+                  }}
+                >
+                  Excluir
+                </Button>
+                <Button
+                  flex={1}
+                  variant="ghost"
+                  size="sm"
+                  colorScheme="orange"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openCategoryModal(category);
+                  }}
+                >
+                  Editar
+                </Button>
+              </Flex>
+            )}
           </Stack>
         </CardBody>
       </Card>
@@ -446,7 +457,7 @@ const TournamentView: NextPageWithAuth = () => {
                   <MenuList>
                     <MenuItem
                       icon={<AddIcon />}
-                      onClick={() => router.push(`/tournament/${id}/category/new`)}
+                      onClick={() => router.push(`/tournaments/categories`)}
                     >
                       Nova Categoria
                     </MenuItem>
@@ -600,7 +611,7 @@ const TournamentView: NextPageWithAuth = () => {
                       <Button
                         leftIcon={<AddIcon />}
                         colorScheme="blue"
-                        onClick={() => router.push(`/tournament/${id}/category/new`)}
+                        onClick={() => router.push(`/categories/create`)}
                         size={buttonSize}
                       >
                         Nova
@@ -622,7 +633,7 @@ const TournamentView: NextPageWithAuth = () => {
                           <Button
                             colorScheme="blue"
                             mt={4}
-                            onClick={() => router.push(`/tournament/${id}/category/new`)}
+                            onClick={() => router.push(`/categories/create`)}
                           >
                             Criar primeira categoria
                           </Button>
@@ -631,11 +642,11 @@ const TournamentView: NextPageWithAuth = () => {
                     </CardBody>
                   </Card>
                 ) : (
-                  <Stack spacing={4}>
+                  <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
                     {filteredCategories.map(category => (
                       <CategoryCard key={category.id} category={category} />
                     ))}
-                  </Stack>
+                  </SimpleGrid>
                 )}
               </TabPanel>
 
@@ -819,10 +830,10 @@ const TournamentView: NextPageWithAuth = () => {
                           {getStatusText(selectedCategory.status)}
                         </Badge>
                         <Badge colorScheme="purple">
-                          {selectedCategory.disputeModel}
+                          {selectedCategory.dispute_model}
                         </Badge>
                         <Badge colorScheme="blue">
-                          {selectedCategory.gameType}
+                          {selectedCategory.game_type}
                         </Badge>
                         <Badge colorScheme="teal">
                           {selectedCategory.gender}
@@ -858,13 +869,13 @@ const TournamentView: NextPageWithAuth = () => {
                         <Box>
                           <Text fontWeight="semibold">Vagas:</Text>
                           <Text>
-                            {selectedCategory.currentRegistrations}/{selectedCategory.maxRegistrations}
+                            {selectedCategory.current_registrations || 0}/{selectedCategory.max_registrations}
                           </Text>
                         </Box>
                         <Box>
                           <Text fontWeight="semibold">Progresso:</Text>
                           <Progress
-                            value={(selectedCategory.currentRegistrations / selectedCategory.maxRegistrations) * 100}
+                            value={((selectedCategory.current_registrations || 0) / selectedCategory.max_registrations) * 100}
                             size="sm"
                             colorScheme="blue"
                             borderRadius="full"

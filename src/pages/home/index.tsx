@@ -343,7 +343,7 @@ const renderCarousel = (items: Tournament[], title: string, isFeatured: boolean 
       <Box minH="100vh" bg={bgColor}>
         {/* Hero Section */}
         <Box
-          bgImage="url('https://diariodorio.com/wp-content/uploads/2025/03/Beach-Tennis-na-Praia-de-Copacabana.jpeg')"
+          bgImage="url('https://www.rj.gov.br/esporte/sites/default/files/imagem_noticias/53287410919_d2d6107fbf_o-min.jpg')"
           bgSize="cover"
           bgPosition="center"
           py={20}
@@ -356,7 +356,7 @@ const renderCarousel = (items: Tournament[], title: string, isFeatured: boolean 
             left: 0,
             right: 0,
             bottom: 0,
-            bg: 'rgba(0,0,0,0.5)',
+            bg: 'rgba(0, 0, 0, 0.55)',
             zIndex: 1
           }}
         >

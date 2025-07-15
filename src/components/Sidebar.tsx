@@ -6,6 +6,7 @@ import {
   FiLogOut
 } from 'react-icons/fi';
 import { useRouter } from 'next/router';
+import { FaCertificate } from 'react-icons/fa';
 
 interface SidebarProps {
   isMobile?: boolean;
@@ -65,6 +66,19 @@ const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
             onClick={() => handleNavigation('/tournaments')}
           >
             Ver Torneios
+          </Button>
+        </ListItem>
+
+          <ListItem>
+          <Button
+            w="full"
+            justifyContent="flex-start"
+            leftIcon={<FaCertificate />}
+            variant="ghost"
+            colorScheme="green"
+            onClick={() => handleNavigation('/categories/create')}
+          >
+            Criar Categoria
           </Button>
         </ListItem>
       </List>
