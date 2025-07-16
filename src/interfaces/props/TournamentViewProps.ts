@@ -1,0 +1,3 @@
+interface TournamentViewProps {
+  tournamentId: string;
+}
