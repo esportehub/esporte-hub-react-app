@@ -611,7 +611,7 @@ const TournamentView: NextPageWithAuth = () => {
                       <Button
                         leftIcon={<AddIcon />}
                         colorScheme="blue"
-                        onClick={() => router.push(`/categories/create?tournamentId=${id}`)}
+                        onClick={() => router.push(`/tournaments/categories/create?tournamentId=${id}`)}
                         size={buttonSize}
                       >
                         Criar Nova Categoria
