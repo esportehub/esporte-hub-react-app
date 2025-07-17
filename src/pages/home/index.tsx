@@ -30,7 +30,8 @@ import {
   ModalFooter,
   ModalCloseButton,
   useDisclosure,
-  Divider
+  Divider,
+  HStack
 } from '@chakra-ui/react';
 import {
   FiHelpCircle,
@@ -50,6 +51,7 @@ import Layout from '@/components/Layout';
 import { NextPageWithAuth } from 'next';
 import axios from 'axios';
 import { useAuth } from '@/hooks/auth/authContext';
+import logopng2 from '@/assets/Logopng2.png';
 
 interface Tournament {
   id: string;
@@ -86,8 +88,12 @@ const HomePage: NextPageWithAuth = () => {
   const { decodedToken } = useAuth();
   const router = useRouter();
   const toast = useToast();
-  const isMobile = useBreakpointValue({ base: true, md: false });
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  // Breakpoints
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const isTablet = useBreakpointValue({ base: false, md: true, lg: false });
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
 
   // Estados
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -208,7 +214,7 @@ const HomePage: NextPageWithAuth = () => {
     }
 
     setSearchResults(filtered);
-    onOpen(); // Abre o modal com os resultados
+    onOpen();
   };
 
   // Handlers
@@ -317,12 +323,7 @@ const HomePage: NextPageWithAuth = () => {
         mx={2}
       >
         <Box h="200px" bg="gray.200" overflow="hidden" position="relative">
-          <Box
-            bgImage='url("https://www.saocarlosclube.com.br/images/2019/04_abril/noticias/beach_tenis_800.jpg")'
-            objectFit="cover"
-            w="100%"
-            h="100%"
-          />
+          <Image src={logopng2.src} alt="Logo" objectFit="cover" w="100%" h="100%" />
           <Badge
             position="absolute"
             top="2"
@@ -590,41 +591,41 @@ const HomePage: NextPageWithAuth = () => {
                 </Box>
 
                 {/* Esportes e Tipo */}
-<Box>
-  {/* Seção de Esportes */}
-  <Box mb={4}>
-    <FormLabel fontWeight="semibold">Esportes</FormLabel>
-    <CheckboxGroup
-      value={filters.selectedSports}
-      onChange={handleSportChange}
-      colorScheme="green"
-    >
-      <Stack spacing={3} mt={2}>
-        <Checkbox value="BEACH_TENNIS">Beach Tennis</Checkbox>
-        <Checkbox value="TENNIS">Tênis</Checkbox>
-        <Checkbox value="BEACH_VOLLEYBALL">Vôlei de Praia</Checkbox>
-      </Stack>
-    </CheckboxGroup>
-  </Box>
+                <Box>
+                  {/* Seção de Esportes */}
+                  <Box mb={4}>
+                    <FormLabel fontWeight="semibold">Esportes</FormLabel>
+                    <CheckboxGroup
+                      value={filters.selectedSports}
+                      onChange={handleSportChange}
+                      colorScheme="green"
+                    >
+                      <Stack spacing={3} mt={2}>
+                        <Checkbox value="BEACH_TENNIS">Beach Tennis</Checkbox>
+                        <Checkbox value="TENNIS">Tênis</Checkbox>
+                        <Checkbox value="BEACH_VOLLEYBALL">Vôlei de Praia</Checkbox>
+                      </Stack>
+                    </CheckboxGroup>
+                  </Box>
 
-  {/* Divisor visual */}
-  <Divider my={4} borderColor="gray.200" />
+                  {/* Divisor visual */}
+                  <Divider my={4} borderColor="gray.200" />
 
-  {/* Seção de Tipo de Torneio */}
-  <Box>
-    <FormLabel fontWeight="semibold">Tipo de Torneio</FormLabel>
-    <CheckboxGroup
-      value={filters.tournamentType ? [filters.tournamentType] : []}
-      onChange={(values) => handleFilterChange('tournamentType', values[0] || '')}
-      colorScheme="blue"
-    >
-      <Stack spacing={3} mt={2}>
-        <Checkbox value="torneio">Torneio</Checkbox>
-        <Checkbox value="ranking">Ranking</Checkbox>
-      </Stack>
-    </CheckboxGroup>
-  </Box>
-</Box>
+                  {/* Seção de Tipo de Torneio */}
+                  <Box>
+                    <FormLabel fontWeight="semibold">Tipo de Torneio</FormLabel>
+                    <CheckboxGroup
+                      value={filters.tournamentType ? [filters.tournamentType] : []}
+                      onChange={(values) => handleFilterChange('tournamentType', values[0] || '')}
+                      colorScheme="blue"
+                    >
+                      <Stack spacing={3} mt={2}>
+                        <Checkbox value="torneio">Torneio</Checkbox>
+                        <Checkbox value="ranking">Ranking</Checkbox>
+                      </Stack>
+                    </CheckboxGroup>
+                  </Box>
+                </Box>
               </SimpleGrid>
             )}
 
@@ -658,22 +659,92 @@ const HomePage: NextPageWithAuth = () => {
           />
         </Box>
 
-        {/* Modal de resultados da pesquisa */}
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        {/* Modal de resultados da pesquisa - Versão Refatorada */}
+            <Modal isOpen={isOpen} onClose={onClose} size={{ base: "full", md: "6xl" }}>
           <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Resultados da Pesquisa</ModalHeader>
-            <ModalBody>Sua busca retornou {searchResults.length} registros.</ModalBody>
+          <ModalContent maxW={{ base: "100%", md: "90vw" }} mx="auto">
+            <ModalHeader fontSize="2xl">Resultados da Pesquisa ({searchResults.length})</ModalHeader>
             <ModalCloseButton />
-            <ModalBody>
+            <ModalBody pb={6}>
               {searchResults.length === 0 ? (
-                <Text>Nenhum torneio encontrado com os filtros aplicados.</Text>
+                <Text textAlign="center" py={10}>Nenhum torneio encontrado com os filtros aplicados.</Text>
               ) : (
-                <SimpleGrid columns={1} spacing={4}>
-                  {searchResults.map(tournament => (
-                    <TournamentCard key={tournament.id} tournament={tournament} />
-                  ))}
-                </SimpleGrid>
+                <Box>
+                  {/* Desktop - 4 colunas (8 torneios por página) */}
+                  <Box display={{ base: 'none', lg: 'block' }}>
+                    <SimpleGrid columns={4} gap={6}>
+                      {searchResults.slice(carouselIndex * 8, carouselIndex * 8 + 8).map((tournament, index) => (
+                        <Box key={tournament.id}>
+                          <TournamentCard tournament={tournament} />
+                        </Box>
+                      ))}
+                    </SimpleGrid>
+                  </Box>
+
+                  {/* Tablet - 2 colunas (6 torneios por página) */}
+                  <Box display={{ base: 'none', md: 'block', lg: 'none' }}>
+                    <SimpleGrid columns={2} gap={6}>
+                      {searchResults.slice(carouselIndex * 3, carouselIndex * 3 + 3).map((tournament) => (
+                        <Box key={tournament.id}>
+                          <TournamentCard tournament={tournament} />
+                        </Box>
+                      ))}
+                    </SimpleGrid>
+                  </Box>
+
+                  {/* Mobile - 1 coluna (3 torneios por página) */}
+                  <Box display={{ base: 'block', md: 'none' }}>
+                    <SimpleGrid columns={1} gap={6}>
+                      {searchResults.slice(carouselIndex * 3, carouselIndex * 3 + 3).map((tournament) => (
+                        <Box key={tournament.id}>
+                          <TournamentCard tournament={tournament} />
+                        </Box>
+                      ))}
+                    </SimpleGrid>
+                  </Box>
+
+                  {/* Controles do carrossel */}
+                  <Flex justify="center" mt={6} align="center">
+                    <IconButton
+                      icon={<FiChevronLeft />}
+                      aria-label="Anterior"
+                      onClick={() => setCarouselIndex(prev => Math.max(0, prev - 1))}
+                      mr={2}
+                      isDisabled={carouselIndex === 0}
+                    />
+                    
+                    <HStack spacing={2} mx={4}>
+                      {[...Array(
+                        Math.ceil(searchResults.length / (isMobile ? 3 : (isTablet ? 6 : 8)))
+                      )].map((_, i) => (
+                        <Box
+                          key={i}
+                          as="button"
+                          w={3}
+                          h={3}
+                          rounded="full"
+                          bg={carouselIndex === i ? 'blue.500' : 'gray.300'}
+                          onClick={() => setCarouselIndex(i)}
+                          aria-label={`Ir para página ${i + 1}`}
+                        />
+                      ))}
+                    </HStack>
+                    
+                    <IconButton
+                      icon={<FiChevronRight />}
+                      aria-label="Próximo"
+                      onClick={() => setCarouselIndex(prev => 
+                        Math.min(
+                          prev + 1, 
+                          Math.ceil(searchResults.length / (isMobile ? 3 : (isTablet ? 6 : 8))) - 1
+                        )
+                      )}
+                      isDisabled={carouselIndex >= Math.ceil(
+                        searchResults.length / (isMobile ? 3 : (isTablet ? 6 : 8))
+                      ) - 1}
+                    />
+                  </Flex>
+                </Box>
               )}
             </ModalBody>
             <ModalFooter>
